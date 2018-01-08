@@ -25,7 +25,7 @@ explorercli init --chain-id=gaia-2 --node=tcp://gaia-2-node0.testnets.interblock
 2. Start our gaia node:
 
    ```
-   gaia start --home=$GAIANET
+   gaia node start --home=$GAIANET
    ```
 
 3. Initializing to connect to our own node:
