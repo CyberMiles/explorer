@@ -10,15 +10,13 @@ import (
   "github.com/cosmos/cosmos-sdk/client"
   "github.com/cosmos/cosmos-sdk/client/commands"
   "github.com/cosmos/cosmos-sdk/client/commands/query"
-  "github.com/cosmos/cosmos-sdk/client/commands/search"
   "github.com/cosmos/cosmos-sdk/modules/coin"
   "github.com/cosmos/cosmos-sdk/stack"
   "github.com/tendermint/tmlibs/common"
 )
 
-// doQueryAccount is the HTTP handlerfunc to query an account
-// It expects a query string with
-func doQueryAccount(w http.ResponseWriter, r *http.Request) {
+// queryAccount is the HTTP handlerfunc to query an account by address
+func queryAccount(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   address := args["address"]
   actor, err := commands.ParseActor(address)
@@ -46,49 +44,10 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-// doSearchTxCoin is the HTTP handlerfunc to search for
-// all SendTx transactions with this account as sender
-// or receiver
-func doSearchTxCoin(w http.ResponseWriter, r *http.Request) {
-  args := mux.Vars(r)
-  account := args["address"]
-  actor, err := commands.ParseActor(account)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-
-  findSender := fmt.Sprintf("coin.sender='%s'", actor)
-  findReceiver := fmt.Sprintf("coin.receiver='%s'", actor)
-  prove := !viper.GetBool(commands.FlagTrustNode)
-  all, err := search.FindAnyTx(prove, findSender, findReceiver)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-
-  // format....
-  output, err := search.FormatSearch(all, coin.ExtractCoinTx)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-
-  // display
-  if err := printResult(w, output); err != nil {
-    common.WriteError(w, err)
-  }
-}
-
 // mux.Router registrars
 
 func RegisterQueryAccount(r *mux.Router) error {
-  r.HandleFunc("/account/{address}", doQueryAccount).Methods("GET")
-  return nil
-}
-
-func RegisterSearchTxCoin(r *mux.Router) error {
-  r.HandleFunc("/account/{address}/tx/coin", doSearchTxCoin).Methods("GET")
+  r.HandleFunc("/account/{address}", queryAccount).Methods("GET")
   return nil
 }
 
@@ -97,7 +56,6 @@ func RegisterSearchTxCoin(r *mux.Router) error {
 func RegisterAccount(r *mux.Router) error {
   funcs := []func(*mux.Router) error{
     RegisterQueryAccount,
-    RegisterSearchTxCoin,
   }
 
   for _, fn := range funcs {

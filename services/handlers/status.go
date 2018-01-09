@@ -9,8 +9,8 @@ import (
   "github.com/cosmos/cosmos-sdk/client/commands"
 )
 
-func doQueryStatus(w http.ResponseWriter, r *http.Request) {
-
+// queryStatus is the HTTP handlerfunc to query block chain status
+func queryStatus(w http.ResponseWriter, r *http.Request) {
   c := commands.GetNode()
   status, err := c.Status()
   if err != nil {
@@ -25,7 +25,7 @@ func doQueryStatus(w http.ResponseWriter, r *http.Request) {
 // mux.Router registrars
 
 func RegisterQueryStatus(r *mux.Router) error {
-  r.HandleFunc("/status", doQueryStatus).Methods("GET")
+  r.HandleFunc("/status", queryStatus).Methods("GET")
   return nil
 }
 
