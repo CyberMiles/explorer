@@ -15,8 +15,10 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/modules/base"
 	_ "github.com/cosmos/cosmos-sdk/modules/coin"
 	_ "github.com/cosmos/cosmos-sdk/modules/nonce"
+	_ "github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 
+	_ "github.com/cybermiles/explorer/services/modules/stake"
 	"github.com/cybermiles/explorer/services/handlers"
 )
 

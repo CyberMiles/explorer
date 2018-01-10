@@ -18,6 +18,7 @@ class SearchBox extends Component {
 
   handleSubmit(event) {
     event.preventDefault()
+    this.setState({ value: '' })
     const path = "/account/" + this.state.value
     this.props.history.push(path)
   }

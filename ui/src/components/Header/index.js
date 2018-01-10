@@ -10,7 +10,7 @@ class Header extends React.Component {
   render() {
     return (
       <div>
-        <Menu fixed="top" inverted>
+        <Menu fixed="top" inverted stackable>
           <Container>
             <Menu.Item as={Link} header to="/">
               <Image size="mini" src="/logo.png" style={{ marginRight: "1.5em" }} />
