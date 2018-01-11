@@ -5,7 +5,6 @@ export class AccountStore {
   @observable isLoading = false
   @observable error = undefined
   @observable accountsRegistry = observable.map()
-  @observable address = undefined
 
   getAccount(address) {
     return this.accountsRegistry.get(address)
@@ -15,7 +14,6 @@ export class AccountStore {
   loadAccount(address, { acceptCached = false } = {}) {
     this.error = undefined
     if (acceptCached) {
-      this.address = address
       const account = this.getAccount(address)
       if (account) return Promise.resolve(account)
     }
@@ -24,7 +22,6 @@ export class AccountStore {
       .then(
         account => {
           runInAction(() => {
-            this.address = address
             this.accountsRegistry.set(address, account)
           })
         },

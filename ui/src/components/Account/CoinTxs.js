@@ -1,57 +1,10 @@
 import React, { Component } from "react"
-import { Header, Grid, Segment } from "semantic-ui-react"
+import { Segment, Table } from "semantic-ui-react"
 import { inject, observer } from "mobx-react"
 import { Link } from "react-router-dom"
 
 import Coins from "./Coins"
-import LoadingSpinner from "../common/LoadingSpinner"
 import RedError from "../common/RedError"
-
-class CoinTx extends Component {
-  render() {
-    const { inputs, outputs } = this.props.tx
-    return (
-      <Segment>
-        <Header as="h4">Height: {this.props.height}</Header>
-        <Grid stackable columns="equal">
-          <Grid.Column>
-            {inputs.map((input, index) => (
-              <Input key={index} address={input.sender} coins={input.coins} />
-            ))}
-          </Grid.Column>
-          <Grid.Column width={1}>==></Grid.Column>
-          <Grid.Column>
-            {outputs.map((output, index) => (
-              <Input key={index} address={output.receiver} coins={output.coins} />
-            ))}
-          </Grid.Column>
-        </Grid>
-      </Segment>
-    )
-  }
-}
-
-@inject("accountStore")
-@observer
-class Input extends Component {
-  render() {
-    const { address, coins } = this.props
-    const DivAddress =
-      this.props.accountStore.address === address ? (
-        <Segment>{address}</Segment>
-      ) : (
-        <Segment as={Link} to={"/account/" + address}>
-          {address}
-        </Segment>
-      )
-    return (
-      <Segment.Group horizontal size="mini">
-        {DivAddress}
-        <Coins coins={coins} />
-      </Segment.Group>
-    )
-  }
-}
 
 @inject("coinTxsStore")
 @observer
@@ -69,16 +22,74 @@ class CoinTxs extends Component {
   }
   render() {
     const { isLoading, error } = this.props.coinTxsStore
-    if (isLoading) return <LoadingSpinner />
-    if (error) return <RedError message={error} />
+    if (error !== undefined) return <RedError message={error} />
 
     const txs = this.props.coinTxsStore.coinTxs || []
-    if (txs.length === 0) return <div />
     return (
-      <div>
-        <Header>Coin Transactions</Header>
-        {txs.map((tx, index) => <CoinTx key={index} tx={tx.tx} height={tx.height} />)}
-      </div>
+      <Segment basic loading={isLoading}>
+        <Table basic="very" compact>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell width={1}>Height</Table.HeaderCell>
+              <Table.HeaderCell width={5}>From</Table.HeaderCell>
+              <Table.HeaderCell width={5}>To</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {txs.map((tx, index) => <CoinTx key={index} tx={tx.tx} height={tx.height} />)}
+          </Table.Body>
+        </Table>
+      </Segment>
+    )
+  }
+}
+
+class CoinTx extends Component {
+  render() {
+    const height = this.props.height
+    const { inputs, outputs } = this.props.tx
+    return (
+      <Table.Row verticalAlign="top">
+        <Table.Cell>{height}</Table.Cell>
+        <Table.Cell>
+          {inputs.map((input, index) => (
+            <InputOutput key={index} address={input.sender} coins={input.coins} />
+          ))}
+        </Table.Cell>
+        <Table.Cell>
+          {outputs.map((output, index) => (
+            <InputOutput key={index} address={output.receiver} coins={output.coins} />
+          ))}
+        </Table.Cell>
+      </Table.Row>
+    )
+  }
+}
+
+@inject("coinTxsStore")
+class InputOutput extends Component {
+  render() {
+    const { address, coins } = this.props
+    const DivAddress =
+      this.props.coinTxsStore.address === address ? (
+        <span>{address}</span>
+      ) : (
+        <Link to={"/account/" + address}>{address}</Link>
+      )
+
+    return (
+      <Table basic="very" compact fixed singleLine>
+        <Table.Body>
+          <Table.Row verticalAlign="top">
+            <Table.Cell width={3} style={{ paddingTop: "0px" }}>
+              {DivAddress}
+            </Table.Cell>
+            <Table.Cell width={1} textAlign="right" style={{ paddingTop: "0px" }}>
+              <Coins coins={coins} />
+            </Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table>
     )
   }
 }

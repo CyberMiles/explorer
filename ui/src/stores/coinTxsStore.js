@@ -11,23 +11,24 @@ export class CoinTxsStore {
   loadCoinTxs(address) {
     this.error = undefined
     this.isLoading = true
+    this.address = address
     this.coinTxs.clear()
     return AccountAPI.getCoinTxs(address)
       .then(
         txs => {
           runInAction(() => {
-            this.coinTxs = txs
+            if (address === this.address) this.coinTxs = txs
           })
         },
         error => {
           runInAction(() => {
-            this.error = error.message
+            if (address === this.address) this.error = error.message
           })
         }
       )
       .finally(
         action(() => {
-          this.isLoading = false
+          if (address === this.address) this.isLoading = false
         })
       )
   }
