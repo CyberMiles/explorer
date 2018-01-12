@@ -8,8 +8,6 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
-	basecmd "github.com/cosmos/cosmos-sdk/server/commands"
-
 	"github.com/cybermiles/explorer/services/version"
 )
 
@@ -43,7 +41,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	basecmd.SetUpRoot(ExplorerCli)
 	executor := cli.PrepareMainCmd(ExplorerCli, "EX", os.ExpandEnv("$HOME/.explorer-cli"))
 	executor.Execute()
 }
