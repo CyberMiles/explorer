@@ -14,47 +14,99 @@ import (
   "github.com/cosmos/cosmos-sdk/client/commands"
   "github.com/cosmos/cosmos-sdk/client/commands/search"
   "github.com/cosmos/cosmos-sdk/modules/coin"
+  "github.com/cosmos/cosmos-sdk/modules/fee"
+  "github.com/cybermiles/explorer/services/modules/stake"
+
   wire "github.com/tendermint/go-wire"
   "github.com/tendermint/tmlibs/common"
+  ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-// queryTx is the HTTP handlerfunc to query a raw tx by txhash
+type resp struct {
+  Height int64       `json:"height"`
+  Tx   interface{} `json:"tx"`
+}
+
+// queryRawTx is the HTTP handlerfunc to query a raw tx by txhash
+func queryRawTx(w http.ResponseWriter, r *http.Request) {
+  args := mux.Vars(r)
+  txhash := args["txhash"]
+  raw := true
+
+  err := getTx(w, txhash, raw)
+  if err != nil {
+    common.WriteError(w, err)
+  }
+}
+
+// queryTx is the HTTP handlerfunc to query an "useful" tx by txhash
 func queryTx(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   txhash := args["txhash"]
+  raw := false
 
-  bkey, err := hex.DecodeString(common.StripHex(txhash))
+  err := getTx(w, txhash, raw)
   if err != nil {
     common.WriteError(w, err)
-    return
   }
-  prove := !viper.GetBool(commands.FlagTrustNode)
-
-  getTx(w, prove, bkey)
 }
 
-// searchCoinTx is the HTTP handlerfunc to search for
-// a SendTx transaction by txhash
-func searchCoinTx(w http.ResponseWriter, r *http.Request) {
-  args := mux.Vars(r)
-  txhash := args["txhash"]
-
-  query := fmt.Sprintf("tx.hash='%s'", txhash)
+func getTx(w http.ResponseWriter, txhash string, raw bool) error {
   prove := !viper.GetBool(commands.FlagTrustNode)
+  bkey, err := hex.DecodeString(common.StripHex(txhash))
+  if err != nil {
+    return err
+  }
 
-  searchTx(w, prove, query)
+  client := commands.GetNode()
+  res, err := client.Tx(bkey, prove)
+  if err != nil {
+    return err
+  }
+
+  // format
+  wrap, err := formatTx(res.Height, res.Proof.Data, raw)
+  if err != nil {
+    return err
+  }
+
+  // display
+  return printResult(w, wrap)
 }
 
-// searchCoinTxByBlock is the HTTP handlerfunc to search for
-// all SendTx transactions by block height
-func searchCoinTxByBlock(w http.ResponseWriter, r *http.Request) {
+func formatTx(height int64, data []byte, raw bool) (interface{}, error) {
+  tx, err := sdk.LoadTx(data)
+  if err != nil {
+    return tx, err
+  }
+  if (!raw) {
+    txl, ok := tx.Unwrap().(sdk.TxLayer)
+    var txi sdk.Tx
+    loop: for ok {
+      txi = txl.Next()
+      switch txi.Unwrap().(type) {
+        case fee.Fee, coin.SendTx, stake.TxDeclareCandidacy:
+          tx = txi
+          break loop
+      }
+      txl, ok = txi.Unwrap().(sdk.TxLayer)
+    }
+  }
+  wrap := &resp{height, tx}
+  return wrap, nil
+}
+
+// searchTxByBlock is the HTTP handlerfunc to search for
+// "useful" transaction by block height
+func searchTxByBlock(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   txhash := args["height"]
-
   query := fmt.Sprintf("height=%s", txhash)
-  prove := !viper.GetBool(commands.FlagTrustNode)
 
-  searchTx(w, prove, query)
+  err := searchTx(w, query)
+  if err != nil {
+    common.WriteError(w, err)
+  }
 }
 
 // searchCoinTxByAccount is the HTTP handlerfunc to search for
@@ -71,80 +123,69 @@ func searchCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
 
   findSender := fmt.Sprintf("coin.sender='%s'", actor)
   findReceiver := fmt.Sprintf("coin.receiver='%s'", actor)
-  prove := !viper.GetBool(commands.FlagTrustNode)
 
-  searchTx(w, prove, findSender, findReceiver)
+  err = searchTx(w, findSender, findReceiver)
+  if err != nil {
+    common.WriteError(w, err)
+  }
 }
 
+func searchTx(w http.ResponseWriter, queries ...string) error {
+  prove := !viper.GetBool(commands.FlagTrustNode)
+
+  all, err := search.FindAnyTx(prove, queries ...)
+  if err != nil {
+    return err
+  }
+
+  // format
+  wrap, err := formatSearch(all)
+  if err != nil {
+    return err
+  }
+
+  // display
+  return printResult(w, wrap)
+}
+
+func formatSearch(res []*ctypes.ResultTx) ([]interface{}, error) {
+  out := make([]interface{}, 0, len(res))
+  for _, r := range res {
+    wrap, err := formatTx(r.Height, r.Tx, false)
+    if err != nil {
+      return nil, err
+    }
+    out = append(out, wrap)
+  }
+  return out, nil
+}
+
+// decodeRaw is the HTTP handlerfunc to decode tx string
 func decodeRaw(w http.ResponseWriter, r *http.Request) {
   buf := new(bytes.Buffer)
   buf.ReadFrom(r.Body)
   body := buf.String()
 
-  decodeTx(w, body)
-}
-
-type proof struct {
-  Height int64       `json:"height"`
-  Data   interface{} `json:"data"`
-}
-// getTx parses anything that was previously registered as sdk.Tx
-func getTx(w http.ResponseWriter, prove bool, bkey []byte) {
-  client := commands.GetNode()
-  res, err := client.Tx(bkey, prove)
+  err := decode(w, body)
   if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-  var tx sdk.Tx
-  err = wire.ReadBinaryBytes(res.Proof.Data, &tx)
-  // tx, err := coin.ExtractCoinTx(data)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-  wrap := &proof{res.Height, tx}
-  // display
-  if err := printResult(w, wrap); err != nil {
     common.WriteError(w, err)
   }
 }
 
-func searchTx(w http.ResponseWriter, prove bool, queries ...string) {
-  all, err := search.FindAnyTx(prove, queries ...)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-  // format....
-  output, err := search.FormatSearch(all, coin.ExtractCoinTx)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-  // display
-  if err := printResult(w, output); err != nil {
-    common.WriteError(w, err)
-  }
-}
-
-func decodeTx(w http.ResponseWriter, body string) {
+func decode(w http.ResponseWriter, body string) error {
   data, err := base64.StdEncoding.DecodeString(body)
   if err != nil {
-    common.WriteError(w, err)
-    return
+    return err
   }
 
   var tx sdk.Tx
   err = wire.ReadBinaryBytes([]byte(data), &tx)
   if err != nil {
-    common.WriteError(w, err)
-    return
+    return err
   }
+
   // display
-  if err := printResult(w, tx); err != nil {
-    common.WriteError(w, err)
-  }
+  return printResult(w, tx)
 }
 
 // mux.Router registrars
@@ -154,13 +195,13 @@ func RegisterQueryTx(r *mux.Router) error {
   return nil
 }
 
-func RegisterSearchCoinTx(r *mux.Router) error {
-  r.HandleFunc("/tx/coin/{txhash}", searchCoinTx).Methods("GET")
+func RegisterQueryRawTx(r *mux.Router) error {
+  r.HandleFunc("/tx/{txhash}/raw", queryRawTx).Methods("GET")
   return nil
 }
 
-func registerSearchCoinTxByBlock(r *mux.Router) error {
-  r.HandleFunc("/block/{height}/tx/coin", searchCoinTxByBlock).Methods("GET")
+func registerSearchTxByBlock(r *mux.Router) error {
+  r.HandleFunc("/block/{height}/tx", searchTxByBlock).Methods("GET")
   return nil
 }
 
@@ -179,8 +220,8 @@ func RegisterDecodeRaw(r *mux.Router) error {
 func RegisterTx(r *mux.Router) error {
   funcs := []func(*mux.Router) error{
     RegisterQueryTx,
-    RegisterSearchCoinTx,
-    registerSearchCoinTxByBlock,
+    RegisterQueryRawTx,
+    registerSearchTxByBlock,
     RegisterSearchCoinTxByAccount,
     RegisterDecodeRaw,
   }

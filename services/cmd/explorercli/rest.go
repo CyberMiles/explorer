@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	// "os"
+	"os"
 	"log"
 	"net/http"
 
-  // "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+  "github.com/gorilla/handlers"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/commands"
 
 	_ "github.com/cybermiles/explorer/services/modules/stake"
-	"github.com/cybermiles/explorer/services/handlers"
+	services "github.com/cybermiles/explorer/services/handlers"
 )
 
 var (
@@ -45,10 +45,10 @@ func AddV1Routes(r *mux.Router) {
 
 func AddRoutes(r *mux.Router) {
 	routeRegistrars := []func(*mux.Router) error{
-		handlers.RegisterStatus,
-		handlers.RegisterBlock,
-		handlers.RegisterAccount,
-		handlers.RegisterTx,
+		services.RegisterStatus,
+		services.RegisterBlock,
+		services.RegisterAccount,
+		services.RegisterTx,
 	}
 
 	for _, routeRegistrar := range routeRegistrars {
@@ -68,7 +68,9 @@ func cmdRestServer(cmd *cobra.Command, args []string) error {
 	addr := fmt.Sprintf(":%d", viper.GetInt(flagPort))
 
 	log.Printf("Serving on %q", addr)
-	return http.ListenAndServe(addr, router)
+
+	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
+	return http.ListenAndServe(addr, loggedRouter)
 	// return http.ListenAndServe(addr,
  //        handlers.LoggingHandler(os.Stdout, handlers.CORS(
  //            handlers.AllowedMethods([]string{"GET"}),
