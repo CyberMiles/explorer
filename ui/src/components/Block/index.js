@@ -1,8 +1,9 @@
 import React, { Component } from "react"
 import { inject, observer } from "mobx-react"
-import { Segment, Header, Table, Button, Icon, Label } from "semantic-ui-react"
+import { Segment, Header, Table, Button, Icon } from "semantic-ui-react"
 import { Link } from "react-router-dom"
 
+import Validators from "./Validators"
 import RedError from "../common/RedError"
 
 @inject("blockStore")
@@ -82,6 +83,8 @@ export default class Block extends Component {
             </Table.Body>
           </Table>
         </Segment>
+        <Header dividing>Validators</Header>
+        <Validators height={height} />
       </div>
     )
   }

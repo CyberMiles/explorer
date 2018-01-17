@@ -31,6 +31,27 @@ func queryBlock(w http.ResponseWriter, r *http.Request) {
   }
 }
 
+// queryValidators is to query validators by height
+func queryValidators(w http.ResponseWriter, r *http.Request) {
+  args := mux.Vars(r)
+  height := args["height"]
+
+  c, err := getSecureNode()
+  if err != nil {
+    common.WriteError(w, err)    
+    return
+  }
+
+  h := cast.ToInt64(height)
+  block, err := c.Validators(&h)
+  if err != nil {
+    common.WriteError(w, err)    
+    return
+  }
+  if err := printResult(w, block); err != nil {
+    common.WriteError(w, err)    
+  }
+}
 // mux.Router registrars
 
 func RegisterQueryBlock(r *mux.Router) error {
@@ -38,9 +59,15 @@ func RegisterQueryBlock(r *mux.Router) error {
   return nil
 }
 
+func RegisterQueryValidators(r *mux.Router) error {
+  r.HandleFunc("/validators/{height}", queryValidators).Methods("GET")
+  return nil
+}
+
 func RegisterBlock(r *mux.Router) error {
   funcs := []func(*mux.Router) error{
     RegisterQueryBlock,
+    RegisterQueryValidators,
   }
 
   for _, fn := range funcs {
