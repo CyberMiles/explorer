@@ -8,29 +8,25 @@ export class ValidatorStore {
   @observable validators = []
 
   @action
-  loadValidators(height, { acceptCached = false } = {}) {
+  async loadValidators(height, { acceptCached = false } = {}) {
     this.error = undefined
     this.isLoading = true
     this.height = height
     this.validators.clear()
-    return ValidatorAPI.get(height)
-      .then(
-        ret => {
-          runInAction(() => {
-            if (height === this.height) this.validators = ret.validators
-          })
-        },
-        error => {
-          runInAction(() => {
-            if (height === this.height) this.error = error.message
-          })
-        }
-      )
-      .finally(
-        action(() => {
-          if (height === this.height) this.isLoading = false
-        })
-      )
+    try {
+      const ret = await ValidatorAPI.get(height)
+      runInAction(() => {
+        if (height === this.height) this.validators = ret.validators
+      })
+    } catch (error) {
+      runInAction(() => {
+        if (height === this.height) this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        if (height === this.height) this.isLoading = false
+      })
+    }
   }
 }
 

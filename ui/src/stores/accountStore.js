@@ -11,31 +11,27 @@ export class AccountStore {
   }
 
   @action
-  loadAccount(address, { acceptCached = false } = {}) {
+  async loadAccount(address, { acceptCached = false } = {}) {
     this.error = undefined
     if (acceptCached) {
       const account = this.getAccount(address)
-      if (account) return Promise.resolve(account)
+      if (account) return account
     }
     this.isLoading = true
-    return AccountAPI.get(address)
-      .then(
-        account => {
-          runInAction(() => {
-            this.accountsRegistry.set(address, account)
-          })
-        },
-        error => {
-          runInAction(() => {
-            this.error = error.message
-          })
-        }
-      )
-      .finally(
-        action(() => {
-          this.isLoading = false
-        })
-      )
+    try {
+      const account = await AccountAPI.get(address)
+      runInAction(() => {
+        this.accountsRegistry.set(address, account)
+      })
+    } catch (error) {
+      runInAction(() => {
+        this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        this.isLoading = false
+      })
+    }
   }
 }
 

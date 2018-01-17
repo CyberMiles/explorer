@@ -36,6 +36,7 @@ func main() {
 	ExplorerCli.AddCommand(
 		commands.InitCmd,
 		restServerCmd,
+		syncCmd,
 		
 		version.VersionCmd,
 	)

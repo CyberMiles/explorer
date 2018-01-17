@@ -4,38 +4,88 @@ import { TxAPI } from "../api"
 export class TxStore {
   @observable isLoading = false
   @observable error = undefined
-  @observable blocksRegistry = observable.map()
+  @observable txsRegistry = observable.map()
+  @observable recentCoinTx = []
+  @observable recentStakeTx = []
 
   getTx(txhash) {
-    return this.blocksRegistry.get(txhash)
+    return this.txsRegistry.get(txhash)
   }
 
   @action
-  loadTx(txhash, { acceptCached = false } = {}) {
+  async loadTx(txhash, { acceptCached = false } = {}) {
     this.error = undefined
     if (acceptCached) {
-      const block = this.getTx(txhash)
-      if (block) return Promise.resolve(block)
+      const tx = this.getTx(txhash)
+      if (tx) return Promise.resolve(tx)
     }
     this.isLoading = true
-    return TxAPI.get(txhash)
-      .then(
-        block => {
-          runInAction(() => {
-            this.blocksRegistry.set(txhash, block)
-          })
-        },
-        error => {
-          runInAction(() => {
-            this.error = error.message
-          })
-        }
-      )
-      .finally(
-        action(() => {
-          this.isLoading = false
+    try {
+      const tx = await TxAPI.get(txhash)
+      runInAction(() => {
+        this.txsRegistry.set(txhash, tx)
+      })
+    } catch (error) {
+      runInAction(() => {
+        this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        this.isLoading = false
+      })
+    }
+  }
+  @action
+  async loadRecentCoinTx(length = 20) {
+    this.error = undefined
+    this.isLoading = false
+    this.recentCoinTx = []
+    try {
+      const txs = await TxAPI.getRecentCoinTx()
+      runInAction(() => {
+        this.recentCoinTx = txs.map(tx => {
+          return {
+            txhash: tx.txhash,
+            from: tx.from,
+            to: tx.to
+          }
         })
-      )
+      })
+    } catch (error) {
+      runInAction(() => {
+        this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        this.isLoading = false
+      })
+    }
+  }
+  @action
+  async loadRecentStakeTx(length = 20) {
+    this.error = undefined
+    this.isLoading = false
+    this.recentStakeTx = []
+    try {
+      const txs = await TxAPI.getRecentStakeTx()
+
+      runInAction(() => {
+        this.recentStakeTx = txs.map(tx => {
+          return {
+            txhash: tx.txhash,
+            type: tx.type
+          }
+        })
+      })
+    } catch (error) {
+      runInAction(() => {
+        this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        this.isLoading = false
+      })
+    }
   }
 }
 

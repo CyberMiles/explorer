@@ -18,8 +18,10 @@ class SearchBox extends Component {
 
   handleSubmit(event) {
     event.preventDefault()
-    this.setState({ value: '' })
-    const path = "/account/" + this.state.value
+    this.setState({ value: "" })
+
+    const value = this.state.value
+    const path = isNaN(value) ? "/account/" + value : "/block/" + value
     this.props.history.push(path)
   }
 
@@ -31,7 +33,7 @@ class SearchBox extends Component {
           icon="search"
           value={this.state.value}
           onChange={this.handleChange}
-          placeholder="Search for account..."
+          placeholder="Search for account, block..."
         />
       </Form>
     )

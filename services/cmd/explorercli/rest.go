@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-  "github.com/gorilla/handlers"
+  // "github.com/gorilla/handlers"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -69,8 +69,8 @@ func cmdRestServer(cmd *cobra.Command, args []string) error {
 
 	log.Printf("Serving on %q", addr)
 
-	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	return http.ListenAndServe(addr, loggedRouter)
+	// loggedRouter := handlers.LoggingHandler(os.Stdout, router)
+	return http.ListenAndServe(addr, router)
 	// return http.ListenAndServe(addr,
  //        handlers.LoggingHandler(os.Stdout, handlers.CORS(
  //            handlers.AllowedMethods([]string{"GET"}),

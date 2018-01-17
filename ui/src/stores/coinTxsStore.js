@@ -8,29 +8,25 @@ export class CoinTxsStore {
   @observable coinTxs = []
 
   @action
-  loadCoinTxs(address) {
+  async loadCoinTxs(address) {
     this.error = undefined
     this.isLoading = true
     this.address = address
     this.coinTxs.clear()
-    return AccountAPI.getCoinTxs(address)
-      .then(
-        txs => {
-          runInAction(() => {
-            if (address === this.address) this.coinTxs = txs
-          })
-        },
-        error => {
-          runInAction(() => {
-            if (address === this.address) this.error = error.message
-          })
-        }
-      )
-      .finally(
-        action(() => {
-          if (address === this.address) this.isLoading = false
-        })
-      )
+    try {
+      const txs = await AccountAPI.getCoinTxs(address)
+      runInAction(() => {
+        if (address === this.address) this.coinTxs = txs
+      })
+    } catch (error) {
+      runInAction(() => {
+        if (address === this.address) this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        if (address === this.address) this.isLoading = false
+      })
+    }
   }
 }
 

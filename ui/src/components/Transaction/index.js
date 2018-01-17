@@ -45,8 +45,15 @@ export default class Transaction extends Component {
                   <Link to={"/block/" + tx.height}>{tx.height}</Link>
                 </Table.Cell>
               </Table.Row>
+              <Table.Row>
+                <Table.Cell width={1}>Time</Table.Cell>
+                <Table.Cell width={10}>{tx.time}</Table.Cell>
+              </Table.Row>
             </Table.Body>
           </Table>
+          <Segment>
+            <pre>{JSON.stringify(tx, null, 2)}</pre>
+          </Segment>
         </Segment>
       </div>
     )

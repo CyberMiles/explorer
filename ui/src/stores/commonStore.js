@@ -2,38 +2,29 @@ import { observable, action, runInAction } from "mobx"
 import { StatusAPI } from "../api"
 
 class CommonStore {
-  @observable appName = "Explorer"
-  @observable appLoaded = false
+  @observable appName = "Cosmos Gaia Explorer (by CyberMiles)"
   @observable isLoading = false
   @observable status = {}
   @observable error = undefined
 
   @action
-  loadStatus() {
+  async loadStatus() {
     this.isLoading = true
-    return StatusAPI.get()
-      .then(
-        status => {
-          runInAction(() => {
-            this.status = status
-          })
-        },
-        error => {
-          runInAction(() => {
-            this.error = error.message
-          })
-        }
-      )
-      .finally(
-        action(() => {
-          this.isLoading = false
-        })
-      )
-  }
-
-  @action
-  setAppLoaded() {
-    this.appLoaded = true
+    try {
+      const status = await StatusAPI.get()
+      // after await, modifying state again, needs an actions:
+      runInAction(() => {
+        this.status = status
+      })
+    } catch (error) {
+      runInAction(() => {
+        this.error = error.message
+      })
+    } finally {
+      runInAction(() => {
+        this.isLoading = false
+      })
+    }
   }
 }
 

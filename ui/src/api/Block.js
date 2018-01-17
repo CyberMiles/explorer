@@ -6,4 +6,10 @@ function get(height) {
     .then(parseJSON)
 }
 
-export default { get }
+function getRecent() {
+  return fetch(`${API_ROOT}/blocks/recent`)
+    .then(checkStatus)
+    .then(parseJSON)
+}
+
+export default { get, getRecent }
