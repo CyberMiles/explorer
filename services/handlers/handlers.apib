@@ -1,0 +1,793 @@
+
+# Group Handlers
+
+## /account/{address}
+
++ Parameters
+    + address: `7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0` (string)
+
+### Query Account [GET]
+is to query an account by address
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            {
+  "height": 562446,
+  "data": {
+    "coins": [
+      {
+        "denom": "fermion",
+        "amount": 4
+      }
+    ],
+    "credit": []
+  }
+}
+        
+
+
+
+## /account/{address}/tx/coin
+
++ Parameters
+    + address: `7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0` (string)
+
+### Search Coin Tx By Account [GET]
+is to search for
+all SendTx transactions with this account as sender
+or receiver
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            [
+  {
+    "height": 178507,
+    "tx": {
+      "type": "fee/tx",
+      "data": {
+        "fee": {
+          "denom": "fermion",
+          "amount": 1
+        },
+        "payer": {
+          "chain": "",
+          "app": "sigs",
+          "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+        },
+        "tx": {
+          "type": "coin/send",
+          "data": {
+            "inputs": [
+              {
+                "address": {
+                  "chain": "",
+                  "app": "sigs",
+                  "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+                },
+                "coins": [
+                  {
+                    "denom": "fermion",
+                    "amount": 2
+                  }
+                ]
+              }
+            ],
+            "outputs": [
+              {
+                "address": {
+                  "chain": "",
+                  "app": "sigs",
+                  "addr": "6A9AEA0331598799D5F009EC9B7D635BB8F34EFF"
+                },
+                "coins": [
+                  {
+                    "denom": "fermion",
+                    "amount": 2
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "height": 178071,
+    "tx": {
+      "type": "coin/send",
+      "data": {
+        "inputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 1
+              }
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "6A9AEA0331598799D5F009EC9B7D635BB8F34EFF"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "height": 66804,
+    "tx": {
+      "type": "coin/send",
+      "data": {
+        "inputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "D3EEBDF9593BE3D3C0B249DB56A9E45DC490FE97"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "height": 10546,
+    "tx": {
+      "type": "coin/send",
+      "data": {
+        "inputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "F75D0FD7036A3BB9092DD0938BBF0A9323224832"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 10
+              }
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 10
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]
+        
+
+
+
+## /block/{height}
+
++ Parameters
+    + height: `10546` (number)
+
+### Query Block [GET]
+is to query a block by height
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            {
+  "block_meta": {
+    "block_id": {
+      "hash": "F78FF304909587F77A52D5900367783F69A4FAAD",
+      "parts": {
+        "total": 1,
+        "hash": "5DCA1BA2A87A084EB1CEFA7D145BEAA4A027C320"
+      }
+    },
+    "header": {
+      "chain_id": "gaia-2",
+      "height": 10546,
+      "time": "2018-01-07T00:53:54.522+08:00",
+      "num_txs": 1,
+      "last_block_id": {
+        "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+        "parts": {
+          "total": 1,
+          "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+        }
+      },
+      "total_txs": 10,
+      "last_commit_hash": "1952C539B87606ADF893DD8A87002A0681946597",
+      "data_hash": "640BEECFF7D4035EA7C9ABCC7F83C0DCA933024C",
+      "validators_hash": "EE5F3404034C524501629B56E0DDC38FAD651F04",
+      "consensus_hash": "B9FD9BB442BAD53793C4C744D44B5F8AF4C09438",
+      "app_hash": "FB3044CF1112AB6D8CA02FE712848A7BF990DB4A",
+      "last_results_hash": "",
+      "evidence_hash": ""
+    }
+  },
+  "block": {
+    "header": {
+      "chain_id": "gaia-2",
+      "height": 10546,
+      "time": "2018-01-07T00:53:54.522+08:00",
+      "num_txs": 1,
+      "last_block_id": {
+        "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+        "parts": {
+          "total": 1,
+          "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+        }
+      },
+      "total_txs": 10,
+      "last_commit_hash": "1952C539B87606ADF893DD8A87002A0681946597",
+      "data_hash": "640BEECFF7D4035EA7C9ABCC7F83C0DCA933024C",
+      "validators_hash": "EE5F3404034C524501629B56E0DDC38FAD651F04",
+      "consensus_hash": "B9FD9BB442BAD53793C4C744D44B5F8AF4C09438",
+      "app_hash": "FB3044CF1112AB6D8CA02FE712848A7BF990DB4A",
+      "last_results_hash": "",
+      "evidence_hash": ""
+    },
+    "data": {
+      "txs": [
+        "FgMBBmdhaWEtMgAAAAAAAAAAaQAAAAcBAQABBHNpZ3MBFPddD9cDaju5CS3Qk4u/CpMjIkgyIAEBAAEEc2lncwEU910P1wNqO7kJLdCTi78KkyMiSDIBAQEHZmVybWlvbgAAAAAAAAAKAQEAAQRzaWdzARRzNKSyZo3hzvDdfbppXClEnsOg0AEBAQdmZXJtaW9uAAAAAAAAAAoB9mnxY8p7rY5WQGP1dSCQbBUQJWQWttCihCHNQB4HH/Sj/8jIPDd2C+bP0lLSiUCSZwnHI90BDlSZU+MAX/kYCAFoagADN5j/oUsAwbIHw9rfQq0SL6X5ydSpvu24J+qZlA=="
+      ]
+    },
+    "evidence": {
+      "evidence": []
+    },
+    "last_commit": {
+      "blockID": {
+        "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+        "parts": {
+          "total": 1,
+          "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+        }
+      },
+      "precommits": [
+        {
+          "validator_address": "3294678052AAD1648F6E0AFBCECE3BD09B402CB1",
+          "validator_index": 0,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.084+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "3FC160B1DC1FEC8518F8272D10BDBE898A1AC2CEDDB7ADC699B5781D943BFA97FCCBB98196F54C1A3A6A22DB2130E88D547794EA376609A27E9E5BAB7931D106"
+          }
+        },
+        {
+          "validator_address": "600AD8E3023710167C242AD1D26C4FB7AD3A3A39",
+          "validator_index": 1,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.025+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "C767A4DAEE0BE3B69D8F4288C39D2EF1A96893B32DFAFBFA762F5E755A7E4E94324F7D97D2FB67FF3BAF8BB700D3959C0805816A1ECDC87CF83B2C565CF82302"
+          }
+        },
+        {
+          "validator_address": "898766AF03F350D117657A7E44E54D92423F9E83",
+          "validator_index": 2,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.072+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "6D88CA3FD8FFB12A548B47492296D2966E6E011285FC5342C73401A05FBD7EB5CBF9D86FA75BE0E9E0AB91CC624FA36838C1DA57B3848CDA47FB9836A4AC2E00"
+          }
+        },
+        {
+          "validator_address": "CA956F20A083A26BF5B9C766E95D246E0624EDC6",
+          "validator_index": 3,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.003+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "0F8DE68BFBE6D2CF4F736111BAD526B5F68836A0E57F7E802E51548937A7F703405C43CCF69A3CEB27271DCA459CA9A0CCF3507A017C7BC6A39C98E1A175A806"
+          }
+        },
+        {
+          "validator_address": "DC321F5C8DD94234903B53D44C1CF3B37B817950",
+          "validator_index": 4,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.024+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "B96A4F40BEDC0083C41CD3670D31B8BE13C74DD2D60B829D4D09DF4B274A30BE2FD4DACA1F1FC6A813D9B9F9F76623AD071A1BBD53B374BA9A283F57AFCDDE05"
+          }
+        },
+        {
+          "validator_address": "DD59852B326AB9AC57E3A8CAF4F00459A9539970",
+          "validator_index": 5,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.106+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "DD9780B51D0404D89ADE2340967069309FE776FDD7DBF063870FDCABF440E0F2A56D5EBEC5DD1327A5C55286BB86353CA4B6A01821B95E3ED30E42748BDF6C0E"
+          }
+        },
+        {
+          "validator_address": "E99FA5A12168E0C4194F1324866164331A1AC2C0",
+          "validator_index": 6,
+          "height": 10545,
+          "round": 0,
+          "timestamp": "2018-01-07T00:53:36.065+08:00",
+          "type": 2,
+          "block_id": {
+            "hash": "AF9F37540EEB70F4116F6EF27072487110AC8D54",
+            "parts": {
+              "total": 1,
+              "hash": "D605DC97C630595FE1467682F8D2DFB157CE7305"
+            }
+          },
+          "signature": {
+            "type": "ed25519",
+            "data": "71ED7A8A7A2D820D46D45435AB3EEBE8CCA5EE5E82DFC8770BE3A2FE00A2FAF54F19143831C3F4364C68BB68FAD72CC6C09418D5828EDAC22BAF4DA42C1FC701"
+          }
+        }
+      ]
+    }
+  }
+}
+        
+
+
+
+## /block/{height}/tx
+
++ Parameters
+    + height: `10546` (number)
+
+### Search Tx By Block [GET]
+is to search for inner transaction by block height
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            [
+  {
+    "height": 10546,
+    "tx": {
+      "type": "coin/send",
+      "data": {
+        "inputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "F75D0FD7036A3BB9092DD0938BBF0A9323224832"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 10
+              }
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "address": {
+              "chain": "",
+              "app": "sigs",
+              "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+            },
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 10
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]
+        
+
+
+
+## /status
+
+### Query Status [GET]
+is to query block chain status
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            {
+  "node_info": {
+    "pub_key": "BA9E41B14003C1CC2FAEFD26F2BAD81DA819BE8BA84C1F0EDCFFC79EA2B47B12",
+    "moniker": "159.89.198.221",
+    "network": "gaia-2",
+    "remote_addr": "",
+    "listen_addr": "192.168.12.161:46656",
+    "version": "0.15.0",
+    "other": [
+      "wire_version=0.7.2",
+      "p2p_version=0.5.0",
+      "consensus_version=v1/0.2.2",
+      "rpc_version=0.7.0/3",
+      "tx_index=on",
+      "rpc_addr=tcp://0.0.0.0:46657"
+    ]
+  },
+  "pub_key": {
+    "type": "ed25519",
+    "data": "72B9C2BFEF5977F934D32A810532318228CA28FBF671058637A0B5FDFC2079E3"
+  },
+  "latest_block_hash": "134918ECAC54EB02C9C011E693CA6157B1E7B1CB",
+  "latest_app_hash": "3CBF6D8A209F19FD303E285D7AAD7A3F60649570",
+  "latest_block_height": 562447,
+  "latest_block_time": "2018-01-17T17:01:13.926+08:00",
+  "syncing": false
+}
+        
+
+
+
+## /tx/decode
+
+### Decode Raw [POST]
+is to decode tx string
+
+
++ Request 
+
+
+
+    + Body
+
+            FgMBBmdhaWEtMgAAAAAAAAAAaQAAAAIBAQABBHNpZ3MBFHM0pLJmjeHO8N19umlcKUSew6DQIAEBAAEEc2lncwEUczSksmaN4c7w3X26aVwpRJ7DoNABAQEHZmVybWlvbgAAAAAAAAABAQEAAQRzaWdzARRqmuoDMVmHmdXwCeybfWNbuPNO/wEBAQdmZXJtaW9uAAAAAAAAAAEB5pH7Kschidpq7JobqzmfyiiVaYBT7JBXleIDrF6kbIwjoJzFv6zhuumL1G2yBNFN1ecjuKixcrNYeNTH3epODQFDGBaojUlBJwZnojLRIJGmwWB92kp+Vm9HD+2dU9xwGw==        
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            {
+  "type": "sigs/one",
+  "data": {
+    "tx": {
+      "type": "chain/tx",
+      "data": {
+        "chain_id": "gaia-2",
+        "expires_at": 0,
+        "tx": {
+          "type": "nonce",
+          "data": {
+            "sequence": 2,
+            "signers": [
+              {
+                "chain": "",
+                "app": "sigs",
+                "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+              }
+            ],
+            "tx": {
+              "type": "coin/send",
+              "data": {
+                "inputs": [
+                  {
+                    "address": {
+                      "chain": "",
+                      "app": "sigs",
+                      "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+                    },
+                    "coins": [
+                      {
+                        "denom": "fermion",
+                        "amount": 1
+                      }
+                    ]
+                  }
+                ],
+                "outputs": [
+                  {
+                    "address": {
+                      "chain": "",
+                      "app": "sigs",
+                      "addr": "6A9AEA0331598799D5F009EC9B7D635BB8F34EFF"
+                    },
+                    "coins": [
+                      {
+                        "denom": "fermion",
+                        "amount": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "signature": {
+      "Sig": {
+        "type": "ed25519",
+        "data": "E691FB2AC72189DA6AEC9A1BAB399FCA2895698053EC905795E203AC5EA46C8C23A09CC5BFACE1BAE98BD46DB204D14DD5E723B8A8B172B35878D4C7DDEA4E0D"
+      },
+      "Pubkey": {
+        "type": "ed25519",
+        "data": "431816A88D4941270667A232D12091A6C1607DDA4A7E566F470FED9D53DC701B"
+      }
+    }
+  }
+}
+        
+
+
+
+## /tx/{txhash}
+
++ Parameters
+    + txhash: `640BEECFF7D4035EA7C9ABCC7F83C0DCA933024C` (string)
+
+### Query Tx [GET]
+is to query "inner" transaction by txhash
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            {
+  "height": 10546,
+  "tx": {
+    "type": "coin/send",
+    "data": {
+      "inputs": [
+        {
+          "address": {
+            "chain": "",
+            "app": "sigs",
+            "addr": "F75D0FD7036A3BB9092DD0938BBF0A9323224832"
+          },
+          "coins": [
+            {
+              "denom": "fermion",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "address": {
+            "chain": "",
+            "app": "sigs",
+            "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+          },
+          "coins": [
+            {
+              "denom": "fermion",
+              "amount": 10
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+        
+
+
+
+## /tx/{txhash}/raw
+
++ Parameters
+    + txhash: `640BEECFF7D4035EA7C9ABCC7F83C0DCA933024C` (string)
+
+### Query Raw Tx [GET]
+is to query a raw transaction by txhash
+
+
++ Response 200 (text/plain; charset=utf-8)
+
+
+
+    + Body
+
+            {
+  "height": 10546,
+  "tx": {
+    "type": "sigs/one",
+    "data": {
+      "tx": {
+        "type": "chain/tx",
+        "data": {
+          "chain_id": "gaia-2",
+          "expires_at": 0,
+          "tx": {
+            "type": "nonce",
+            "data": {
+              "sequence": 7,
+              "signers": [
+                {
+                  "chain": "",
+                  "app": "sigs",
+                  "addr": "F75D0FD7036A3BB9092DD0938BBF0A9323224832"
+                }
+              ],
+              "tx": {
+                "type": "coin/send",
+                "data": {
+                  "inputs": [
+                    {
+                      "address": {
+                        "chain": "",
+                        "app": "sigs",
+                        "addr": "F75D0FD7036A3BB9092DD0938BBF0A9323224832"
+                      },
+                      "coins": [
+                        {
+                          "denom": "fermion",
+                          "amount": 10
+                        }
+                      ]
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "address": {
+                        "chain": "",
+                        "app": "sigs",
+                        "addr": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0"
+                      },
+                      "coins": [
+                        {
+                          "denom": "fermion",
+                          "amount": 10
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "signature": {
+        "Sig": {
+          "type": "ed25519",
+          "data": "F669F163CA7BAD8E564063F57520906C1510256416B6D0A28421CD401E071FF4A3FFC8C83C37760BE6CFD252D28940926709C723DD010E549953E3005FF91808"
+        },
+        "Pubkey": {
+          "type": "ed25519",
+          "data": "686A00033798FFA14B00C1B207C3DADF42AD122FA5F9C9D4A9BEEDB827EA9994"
+        }
+      }
+    }
+  }
+}
+        
+
+

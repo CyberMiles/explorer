@@ -15,7 +15,7 @@ import (
   "github.com/tendermint/tmlibs/common"
 )
 
-// queryAccount is the HTTP handlerfunc to query an account by address
+// queryAccount is to query an account by address
 func queryAccount(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   address := args["address"]

@@ -1,6 +1,10 @@
 hash: 8bb7406b195c13a41092ad01245292c0b24c00530e4e27b729c5b5e5d3eb1198
 updated: 2017-12-29T22:25:56.348725726-05:00
 imports:
+- name: github.com/adams-sarah/test2doc
+  version: c7ff98656171ed5df5bac7f48ac4bbe1fcd4d291
+- name: github.com/adams-sarah/prettytest
+  version: 2880862ae7f579fe57d0a6ddcaabcadb228102e0
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
 - name: github.com/btcsuite/btcd

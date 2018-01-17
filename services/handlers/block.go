@@ -9,8 +9,8 @@ import (
   "github.com/tendermint/tmlibs/common"
 )
 
-// queryAccount is the HTTP handlerfunc to query a block by height
-func doQueryBlock(w http.ResponseWriter, r *http.Request) {
+// queryBlock is to query a block by height
+func queryBlock(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   height := args["height"]
 
@@ -34,7 +34,7 @@ func doQueryBlock(w http.ResponseWriter, r *http.Request) {
 // mux.Router registrars
 
 func RegisterQueryBlock(r *mux.Router) error {
-  r.HandleFunc("/block/{height}", doQueryBlock).Methods("GET")
+  r.HandleFunc("/block/{height}", queryBlock).Methods("GET")
   return nil
 }
 

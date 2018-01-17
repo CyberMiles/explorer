@@ -9,7 +9,7 @@ import (
   "github.com/cosmos/cosmos-sdk/client/commands"
 )
 
-// queryStatus is the HTTP handlerfunc to query block chain status
+// queryStatus is to query block chain status
 func queryStatus(w http.ResponseWriter, r *http.Request) {
   c := commands.GetNode()
   status, err := c.Status()

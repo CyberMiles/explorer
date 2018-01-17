@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 
 import Coins from "./Coins"
 import RedError from "../common/RedError"
+import Pagination from "../common/Pagination"
 
 @inject("coinTxsStore")
 @observer
@@ -41,6 +42,7 @@ class CoinTxs extends Component {
             {txs.map((tx, index) => <CoinTx key={index} height={tx.height} tx={tx.tx} />)}
           </Table.Body>
         </Table>
+        <Pagination totalPagesCount="1" currentPage="1" />
       </Segment>
     )
   }
@@ -73,7 +75,9 @@ class CoinTx extends Component {
 
     return (
       <Table.Row verticalAlign="top">
-        <Table.Cell>{height}</Table.Cell>
+        <Table.Cell>
+          <Link to={"/block/" + height}>{height}</Link>
+        </Table.Cell>
         <Table.Cell>
           {inputs.map((input, index) => (
             <InOut key={index} address={input.address.addr} coins={input.coins} />
@@ -122,7 +126,8 @@ const Address = ({ address, isLink }) =>
   isLink ? <Link to={"/account/" + address}>{address}</Link> : <span>{address}</span>
 
 const CoinLabel = ({ label }) => {
-  const color = label === "IN" ? "green" : label === "OUT" ? "orange" : ""
+  const color =
+    label === "IN" ? "green" : label === "OUT" ? "orange" : label === "SELF" ? "blue" : ""
   if (color === "") return <div />
   return (
     <Label size="small" color={color} horizontal>

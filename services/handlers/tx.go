@@ -27,7 +27,7 @@ type resp struct {
   Tx   interface{} `json:"tx"`
 }
 
-// queryRawTx is the HTTP handlerfunc to query a raw tx by txhash
+// queryRawTx is to query a raw transaction by txhash
 func queryRawTx(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   txhash := args["txhash"]
@@ -39,7 +39,7 @@ func queryRawTx(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-// queryTx is the HTTP handlerfunc to query an "useful" tx by txhash
+// queryTx is to query "inner" transaction by txhash
 func queryTx(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   txhash := args["txhash"]
@@ -64,6 +64,7 @@ func getTx(w http.ResponseWriter, txhash string, raw bool) error {
     return err
   }
 
+  // fmt.Println(hex.EncodeToString(res.Tx.Hash()))
   // format
   wrap, err := formatTx(res.Height, res.Proof.Data, raw)
   if err != nil {
@@ -85,7 +86,7 @@ func formatTx(height int64, data []byte, raw bool) (interface{}, error) {
     loop: for ok {
       txi = txl.Next()
       switch txi.Unwrap().(type) {
-        case fee.Fee, coin.SendTx, stake.TxDeclareCandidacy:
+        case fee.Fee, coin.SendTx, stake.TxDelegate, stake.TxDeclareCandidacy, stake.TxUnbond:
           tx = txi
           break loop
       }
@@ -96,8 +97,7 @@ func formatTx(height int64, data []byte, raw bool) (interface{}, error) {
   return wrap, nil
 }
 
-// searchTxByBlock is the HTTP handlerfunc to search for
-// "useful" transaction by block height
+// searchTxByBlock is to search for inner transaction by block height
 func searchTxByBlock(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   txhash := args["height"]
@@ -109,7 +109,7 @@ func searchTxByBlock(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-// searchCoinTxByAccount is the HTTP handlerfunc to search for
+// searchCoinTxByAccount is to search for
 // all SendTx transactions with this account as sender
 // or receiver
 func searchCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +160,7 @@ func formatSearch(res []*ctypes.ResultTx) ([]interface{}, error) {
   return out, nil
 }
 
-// decodeRaw is the HTTP handlerfunc to decode tx string
+// decodeRaw is to decode tx string
 func decodeRaw(w http.ResponseWriter, r *http.Request) {
   buf := new(bytes.Buffer)
   buf.ReadFrom(r.Body)
