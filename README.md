@@ -18,7 +18,7 @@ Soon to be supported features:
 
 ## How to use
 
-First, you need to build and deploy the [RPC service](https://github.com/CyberMiles/explorer/tree/master/services). The RPC service points to a gaia-2 network node (default is gaia-2-node0.testnets.interblock.io) and provides decoded transactions in JSON format. You can see a [full list of currently implemented RPC services here](https://explorerservices.docs.apiary.io/#reference).
+First, you need to build and deploy the [RESTful service](https://github.com/CyberMiles/explorer/tree/master/services). The RESTful service points to a gaia-2 network node (default is gaia-2-node0.testnets.interblock.io) and provides decoded transactions in JSON format. You can see a [full list of currently implemented service endpoints here](https://explorerservices.docs.apiary.io/#reference).
 
 Second, deploy and start the [node.js web application](https://github.com/CyberMiles/explorer/tree/master/ui), which utilizes the RPC service to display data.
 
