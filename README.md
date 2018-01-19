@@ -6,10 +6,10 @@ http://explorer.cosmosvalidators.com/
 
 Currently supported features:
 
-* Recent blocks [example](http://explorer.cosmosvalidators.com/)
-* Coin transactions and validators in a block [example](http://explorer.cosmosvalidators.com/#/block/178507)
-* Accounts and amounts in each coin transaction [example](http://explorer.cosmosvalidators.com/#/tx/83527AC99E577CEF7408FA8BD2F660F7D95C69BC)
 * Balances and coin transaction history for an account [example](http://explorer.cosmosvalidators.com/#/account/7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0)
+* Coin transactions and validators in a block [example](http://explorer.cosmosvalidators.com/#/block/178507)
+* Raw request for each coin transaction [example](http://explorer.cosmosvalidators.com/#/tx/83527AC99E577CEF7408FA8BD2F660F7D95C69BC)
+* Recent blocks [example](http://explorer.cosmosvalidators.com/)
 
 Soon to be supported features:
 
