@@ -6,15 +6,15 @@ http://explorer.cosmosvalidators.com/
 
 Currently supported features:
 
-* Balances and coin transaction history for an account [example](http://explorer.cosmosvalidators.com/#/account/7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0)
-* Coin transactions and validators in a block [example](http://explorer.cosmosvalidators.com/#/block/178507)
-* Raw request for each coin transaction [example](http://explorer.cosmosvalidators.com/#/tx/83527AC99E577CEF7408FA8BD2F660F7D95C69BC)
-* Recent blocks [example](http://explorer.cosmosvalidators.com/)
+* Balances and coin transaction history for an account. [example](http://explorer.cosmosvalidators.com/#/account/7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0)
+* Transactions and validators in a block. [example](http://explorer.cosmosvalidators.com/#/block/178507)
+* Raw request for each transaction. Examples: [Coin](http://explorer.cosmosvalidators.com/#/tx/83527AC99E577CEF7408FA8BD2F660F7D95C69BC) | [stake/declareCandidacy](http://explorer.cosmosvalidators.com/#/tx/48763EE9C6842FB3B4A096F0710AFF6A1B77A924) | [stake/unbond](http://explorer.cosmosvalidators.com/#/tx/C5452CF712268449FFE519C3731EBEB749A710E7)
+* Recent blocks. [example](http://explorer.cosmosvalidators.com/)
 
 Soon to be supported features:
 
-* Stake transactions
-* Recent transactions
+* Display stake transactions under each account.
+* Recent transactions.
 
 ## How to use
 
