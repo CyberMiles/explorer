@@ -3,10 +3,12 @@ package handlers
 import (
   "fmt"
   "bytes"
+  "strings"
   "net/http"
+  "io/ioutil"
   "encoding/hex"
   "encoding/base64"
-  "strings"
+  "encoding/json"
 
   "github.com/gorilla/mux"
   "github.com/spf13/viper"
@@ -16,11 +18,13 @@ import (
   "github.com/cosmos/cosmos-sdk/client/commands/search"
   "github.com/cosmos/cosmos-sdk/modules/coin"
   "github.com/cosmos/cosmos-sdk/modules/fee"
-  "github.com/cybermiles/explorer/services/modules/stake"
 
   wire "github.com/tendermint/go-wire"
   "github.com/tendermint/tmlibs/common"
   ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+  "github.com/cybermiles/explorer/services/modules/stake"
+  "github.com/cybermiles/explorer/services/modules/sync"
 )
 
 type resp struct {
@@ -104,10 +108,12 @@ func searchTxByBlock(w http.ResponseWriter, r *http.Request) {
   height := args["height"]
   query := fmt.Sprintf("height=%s", height)
 
-  err := searchTx(w, query)
+  wrap, err := searchTx(w, query)
   if err != nil {
     common.WriteError(w, err)
   }
+  // display
+  printResult(w, wrap)
 }
 
 // searchCoinTxByAccount is to search for
@@ -125,28 +131,24 @@ func searchCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
   findSender := fmt.Sprintf("coin.sender='%s'", actor)
   findReceiver := fmt.Sprintf("coin.receiver='%s'", actor)
 
-  err = searchTx(w, findSender, findReceiver)
+  wrap, err := searchTx(w, findSender, findReceiver)
   if err != nil {
     common.WriteError(w, err)
   }
+  // display
+  printResult(w, wrap)
 }
 
-func searchTx(w http.ResponseWriter, queries ...string) error {
+func searchTx(w http.ResponseWriter, queries ...string) ([]interface{}, error) {
   prove := !viper.GetBool(commands.FlagTrustNode)
 
   all, err := search.FindAnyTx(prove, queries ...)
   if err != nil {
-    return err
+    return nil, err
   }
 
   // format
-  wrap, err := formatSearch(all)
-  if err != nil {
-    return err
-  }
-
-  // display
-  return printResult(w, wrap)
+  return formatSearch(all)
 }
 
 func formatSearch(res []*ctypes.ResultTx) ([]interface{}, error) {
@@ -189,56 +191,33 @@ func decode(w http.ResponseWriter, body string) error {
   return printResult(w, tx)
 }
 
+
 // queryRecentCoinTx is to get recent coin transactions
 func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
-  // txhashes := viper.Get("recent-coin-tx")
-  s := "9C62C9AB93664ECB7162683537CF9C028EF8C262,9C62C9AB93664ECB7162683537CF9C028EF8C262"
-  txhashes := strings.Split(s, ",")
-
-  var queries []string
-  for _, txhash := range txhashes {
-    query := fmt.Sprintf("tx.hash='%s'", txhash)
-    fmt.Println(query)
-    queries = append(queries, query)
-  }
-  err := searchTx(w, queries...)
+  raw, err := ioutil.ReadFile(sync.ProgressConfigFile)
   if err != nil {
     common.WriteError(w, err)
+    return
   }
+  var syncResult sync.SyncResult
+  json.Unmarshal(raw, &syncResult)
 
-/*
-  txs := 
-  `[
-    {
-      "txhash": "9C62C9AB93664ECB7162683537CF9C028EF8C262",
-      "from": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0",
-      "to": "6A9AEA0331598799D5F009EC9B7D635BB8F34EFF"
-    },
-    {
-      "txhash": "9C62C9AB93664ECB7162683537CF9C028EF8C262",
-      "from": "7334A4B2668DE1CEF0DD7DBA695C29449EC3A0D0",
-      "to": "6A9AEA0331598799D5F009EC9B7D635BB8F34EFF"
-    }
-  ]`
-
- fmt.Fprintf(w, "%s\n", txs)
-*/
+  // display
+  printResult(w, syncResult.CoinTxs)
 }
 
 // queryRecentStakeTx is to get recent stake transactions
 func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
-  txs := 
-  `[
-    {
-      "txhash": "9C62C9AB93664ECB7162683537CF9C028EF8C262",
-      "type": "Declare"
-    },
-    {
-      "txhash": "9C62C9AB93664ECB7162683537CF9C028EF8C262",
-      "type": "Unbond"
-    }
-  ]`
- fmt.Fprintf(w, "%s\n", txs)
+  raw, err := ioutil.ReadFile(sync.ProgressConfigFile)
+  if err != nil {
+    common.WriteError(w, err)
+    return
+  }
+  var syncResult sync.SyncResult
+  json.Unmarshal(raw, &syncResult)
+
+  // display
+  printResult(w, syncResult.StakeTxs)
 }
 
 // mux.Router registrars

@@ -25,19 +25,17 @@ class RecentBlocks extends Component {
             <Table.Row>
               <Table.HeaderCell width={1}>Height</Table.HeaderCell>
               <Table.HeaderCell width={1}>Time</Table.HeaderCell>
-              <Table.HeaderCell width={3} />
               <Table.HeaderCell width={1}>Txns</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {recent.map((v, index) => {
+            {recent.slice(0, 20).map((v, index) => {
               return (
                 <Table.Row key={index} verticalAlign="top">
                   <Table.Cell>
                     <Link to={"/block/" + v.height}>{v.height}</Link>
                   </Table.Cell>
                   <Table.Cell>{timeAgo(v.time)}</Table.Cell>
-                  <Table.Cell>{v.time} </Table.Cell>
                   <Table.Cell>{v.num_txs} </Table.Cell>
                 </Table.Row>
               )

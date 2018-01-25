@@ -43,13 +43,7 @@ export class TxStore {
     try {
       const txs = await TxAPI.getRecentCoinTx()
       runInAction(() => {
-        this.recentCoinTx = txs.map(tx => {
-          return {
-            txhash: tx.txhash,
-            from: tx.from,
-            to: tx.to
-          }
-        })
+        this.recentCoinTx = txs
       })
     } catch (error) {
       runInAction(() => {
@@ -70,12 +64,7 @@ export class TxStore {
       const txs = await TxAPI.getRecentStakeTx()
 
       runInAction(() => {
-        this.recentStakeTx = txs.map(tx => {
-          return {
-            txhash: tx.txhash,
-            type: tx.type
-          }
-        })
+        this.recentStakeTx = txs
       })
     } catch (error) {
       runInAction(() => {

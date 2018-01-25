@@ -8,9 +8,15 @@ import RecentStakeTxs from "./RecentStakeTxs"
 export default class Home extends Component {
   render() {
     return (
-      <Grid columns={1}>
-        <Grid.Column style={{ paddingTop: 0 }}>
+      <Grid columns={3}>
+        <Grid.Column style={{ padding: 0 }}>
           <RecentBlocks />
+        </Grid.Column>
+        <Grid.Column style={{ padding: 0 }}>
+          <RecentCoinTxs />
+        </Grid.Column>
+        <Grid.Column style={{ padding: 0 }}>
+          <RecentStakeTxs />
         </Grid.Column>
       </Grid>
     )

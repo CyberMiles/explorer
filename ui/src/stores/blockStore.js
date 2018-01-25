@@ -41,13 +41,14 @@ export class BlockStore {
     try {
       const blocks = await BlockAPI.getRecent()
       runInAction(() => {
-        this.recent = blocks.block_metas.map(b => {
-          return {
-            height: b.header.height,
-            time: b.header.time,
-            num_txs: b.header.num_txs
-          }
-        })
+        this.recent = blocks.block_metas
+          .map(b => {
+            return {
+              height: b.header.height,
+              time: b.header.time,
+              num_txs: b.header.num_txs
+            }
+          })
       })
     } catch (error) {
       runInAction(() => {
