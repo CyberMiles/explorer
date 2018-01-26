@@ -39,3 +39,9 @@ explorercli init --chain-id=gaia-2 --node=tcp://gaia-2-node0.testnets.interblock
 ```shell
 explorercli rest-server
 ```
+
+## The API documentation
+
+[Check out](https://explorerservices.docs.apiary.io/#reference) web APIs supported by this service.
+
+
