@@ -4,6 +4,7 @@ import (
   "fmt"
   "bytes"
   "strings"
+  "strconv"
   "net/http"
   "io/ioutil"
   "encoding/hex"
@@ -203,8 +204,14 @@ func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
   var syncResult sync.SyncResult
   json.Unmarshal(raw, &syncResult)
 
+  // check limit
+  txs := syncResult.CoinTxs
+  if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l<=len(txs) {
+    txs = txs[:l]
+  }
+
   // display
-  printResult(w, syncResult.CoinTxs)
+  printResult(w, txs)
 }
 
 // queryRecentStakeTx is to get recent stake transactions
@@ -218,8 +225,14 @@ func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
   var syncResult sync.SyncResult
   json.Unmarshal(raw, &syncResult)
 
+  // check limit
+  txs := syncResult.CoinTxs
+  if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l<=len(txs) {
+    txs = txs[:l]
+  }
+
   // display
-  printResult(w, syncResult.StakeTxs)
+  printResult(w, txs)
 }
 
 // mux.Router registrars
