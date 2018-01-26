@@ -33,7 +33,8 @@ var (
 
 func cmdSync(cmd *cobra.Command, args []string) error {
   // load current syncing progress from file
-  raw, err := ioutil.ReadFile(sync.ProgressConfigFile)
+  file := viper.GetString(sync.FlagSyncJson)
+  raw, err := ioutil.ReadFile(file)
   if err != nil {
     log.Fatal(err)
   }
@@ -97,7 +98,8 @@ func batch(syncResult sync.SyncResult) sync.SyncResult {
   if err != nil {
     log.Fatal(err)
   }
-  ioutil.WriteFile(sync.ProgressConfigFile, json, 0644)
+  file := viper.GetString(sync.FlagSyncJson)
+  ioutil.WriteFile(file, json, 0644)
   fmt.Printf("%d scanned\n", current)
 
   // stop if it's latest block

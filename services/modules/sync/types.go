@@ -8,7 +8,7 @@ import (
 )
 
 const (
-  ProgressConfigFile = "./sync.json"
+  FlagSyncJson = "sync-json"
   SmallBatchSize = 20
   LargeBatchSize = 5000
   MaxRecentSize = 20

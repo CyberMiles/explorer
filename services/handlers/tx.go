@@ -194,7 +194,8 @@ func decode(w http.ResponseWriter, body string) error {
 
 // queryRecentCoinTx is to get recent coin transactions
 func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
-  raw, err := ioutil.ReadFile(sync.ProgressConfigFile)
+  file := viper.GetString(sync.FlagSyncJson)
+  raw, err := ioutil.ReadFile(file)
   if err != nil {
     common.WriteError(w, err)
     return
@@ -208,7 +209,8 @@ func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
 
 // queryRecentStakeTx is to get recent stake transactions
 func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
-  raw, err := ioutil.ReadFile(sync.ProgressConfigFile)
+  file := viper.GetString(sync.FlagSyncJson)
+  raw, err := ioutil.ReadFile(file)
   if err != nil {
     common.WriteError(w, err)
     return

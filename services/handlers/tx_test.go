@@ -46,3 +46,19 @@ func (t *mainSuite) TestDecodeRaw() {
 
   t.Must(t.Equal(resp.StatusCode, http.StatusOK))  
 }
+
+func (t *mainSuite) TestQueryRecentCoinTx() {
+  urlPath := fmt.Sprintf("/txs/recentcoin")
+  resp, err := http.Get(server.URL + urlPath)
+  t.Must(t.Nil(err))
+
+  t.Must(t.Equal(resp.StatusCode, http.StatusOK))  
+}
+
+func (t *mainSuite) TestQueryRecentStakeTx() {
+  urlPath := fmt.Sprintf("/txs/recentstake")
+  resp, err := http.Get(server.URL + urlPath)
+  t.Must(t.Nil(err))
+
+  t.Must(t.Equal(resp.StatusCode, http.StatusOK))  
+}

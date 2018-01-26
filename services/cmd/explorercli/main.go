@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cybermiles/explorer/services/version"
+	"github.com/cybermiles/explorer/services/modules/sync"
 )
 
 // entry point for this binary
@@ -23,6 +24,7 @@ var (
 
 func prepareMainCmd() {
 	commands.AddBasicFlags(ExplorerCli)
+	ExplorerCli.PersistentFlags().String(sync.FlagSyncJson, "./sync.json", "json file to save progress")
 }
 
 func main() {
