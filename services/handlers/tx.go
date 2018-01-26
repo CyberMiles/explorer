@@ -226,7 +226,7 @@ func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
   json.Unmarshal(raw, &syncResult)
 
   // check limit
-  txs := syncResult.CoinTxs
+  txs := syncResult.StakeTxs
   if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l<=len(txs) {
     txs = txs[:l]
   }
