@@ -59,7 +59,8 @@ func batch(syncResult sync.SyncResult) sync.SyncResult {
       log.Fatal(err)
     }
     for _, block := range blocks.BlockMetas {
-      if (block.Header.NumTxs > 0){
+      // TODO:
+      if (block.Header.NumTxs == 1){
         txhash := block.Header.DataHash
         txtype, tx := parseTx(txhash)
         if (txtype == "coin") {
@@ -71,7 +72,7 @@ func batch(syncResult sync.SyncResult) sync.SyncResult {
           syncResult.CoinTxs = append([]sync.CoinTx{coinTx}, syncResult.CoinTxs...)
           if (len(syncResult.CoinTxs) > sync.MaxRecentSize) {
             // remove last one
-            syncResult.CoinTxs = syncResult.CoinTxs[:len(syncResult.CoinTxs)-1]
+            syncResult.CoinTxs = syncResult.CoinTxs[:sync.MaxRecentSize]
           }
           // increase count
           syncResult.TotalCoinTxs = syncResult.TotalCoinTxs + 1
@@ -81,9 +82,9 @@ func batch(syncResult sync.SyncResult) sync.SyncResult {
           stakeTx.Time = block.Header.Time
           stakeTx.Height = block.Header.Height
           syncResult.StakeTxs = append([]sync.StakeTx{stakeTx}, syncResult.StakeTxs...)
-          // if (len(syncResult.StakeTxs) > sync.MaxRecentSize) {
-          //   syncResult.StakeTxs = syncResult.StakeTxs[:len(syncResult.StakeTxs)-1]
-          // }
+          if (len(syncResult.StakeTxs) > sync.MaxRecentSize) {
+            syncResult.StakeTxs = syncResult.StakeTxs[:sync.MaxRecentSize]
+          }
           syncResult.TotalStakeTxs = syncResult.TotalStakeTxs + 1
         }
       }
@@ -117,11 +118,13 @@ func parseTx(bkey []byte) (string, interface{}) {
   res, err := client.Tx(bkey, prove)
   if err != nil {
     log.Fatal(err)
+    return "", nil
   }
 
   tx, err := sdk.LoadTx(res.Proof.Data)
   if err != nil {
     log.Fatal(err)
+    return "", nil
   }
 
   // parse
