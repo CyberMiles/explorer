@@ -310,3 +310,5 @@ testImports:
   subpackages:
   - assert
   - require
+- name: github.com/robfig/cron
+  version: master

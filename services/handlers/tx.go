@@ -24,8 +24,8 @@ import (
   "github.com/tendermint/tmlibs/common"
   ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-  "github.com/cybermiles/explorer/services/modules/stake"
-  "github.com/cybermiles/explorer/services/modules/sync"
+  "github.com/ly0129ly/explorer/services/modules/stake"
+  "github.com/ly0129ly/explorer/services/modules/sync"
 )
 
 type resp struct {

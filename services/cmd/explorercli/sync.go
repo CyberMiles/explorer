@@ -1,34 +1,50 @@
 package main
 
 import (
-	"fmt"
+  "fmt"
   "os"
-	"log"
+  "log"
   "strings"
   "io/ioutil"
   "encoding/json"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+  "github.com/spf13/cobra"
+  "github.com/spf13/viper"
 
   sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/modules/coin"
-	"github.com/cosmos/cosmos-sdk/modules/nonce"
-	"github.com/cosmos/cosmos-sdk/client/commands"
+  "github.com/cosmos/cosmos-sdk/modules/coin"
+  "github.com/cosmos/cosmos-sdk/modules/nonce"
+  "github.com/cosmos/cosmos-sdk/client/commands"
   "github.com/tendermint/go-wire/data"
 
-	"github.com/cybermiles/explorer/services/modules/stake"
-  "github.com/cybermiles/explorer/services/modules/sync"
+  "github.com/ly0129ly/explorer/services/modules/stake"
+  "github.com/ly0129ly/explorer/services/modules/sync"
+  "github.com/robfig/cron"
+  "os/signal"
+  "time"
 )
 
 var (
-	syncCmd = &cobra.Command{
-		Use:   "sync",
-		Long:  `sync`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdSync(cmd, args)
-		},
-	}
+  syncCmd = &cobra.Command{
+    Use:   "sync",
+    Long:  `sync`,
+    RunE: func(cmd *cobra.Command, args []string) error {
+      ch := make(chan os.Signal, 1)
+      signal.Notify(ch, os.Interrupt, os.Kill)
+
+      c := cron.New()
+      c.AddFunc("@every 60s",func(){
+        fmt.Println("sync Transactions")
+        cmdSync(cmd,args)
+      })
+      c.Start()
+
+
+      s := <-ch
+      fmt.Println("Got signal:", s)
+      return nil
+    },
+  }
 )
 
 func cmdSync(cmd *cobra.Command, args []string) error {
@@ -104,7 +120,7 @@ func batch(syncResult sync.SyncResult) sync.SyncResult {
 
   // stop if it's latest block
   if (current >= latest) {
-    os.Exit(0)
+    time.Sleep(time.Second * 60)
   }
 
   return syncResult
@@ -133,37 +149,37 @@ func parseTx(bkey []byte) (string, interface{}) {
   for ok {
     txi = txl.Next()
     switch txi.Unwrap().(type) {
-      case coin.SendTx:
-        ctx, _ := txi.Unwrap().(coin.SendTx)
-        coinTx.From  = ctx.Inputs[0].Address.Address
-        coinTx.To = ctx.Outputs[0].Address.Address
-        return "coin", coinTx
-      case nonce.Tx:
-        ctx, _ := txi.Unwrap().(nonce.Tx)
-        nonceAddr = ctx.Signers[0].Address
+    case coin.SendTx:
+      ctx, _ := txi.Unwrap().(coin.SendTx)
+      coinTx.From  = ctx.Inputs[0].Address.Address
+      coinTx.To = ctx.Outputs[0].Address.Address
+      return "coin", coinTx
+    case nonce.Tx:
+      ctx, _ := txi.Unwrap().(nonce.Tx)
+      nonceAddr = ctx.Signers[0].Address
+      break
+    case stake.TxUnbond,stake.TxDelegate, stake.TxDeclareCandidacy:
+      kind, _ := txi.GetKind()
+      stakeTx.From = nonceAddr
+      stakeTx.Type = strings.Replace(kind, "stake/", "", -1)
+      switch kind {
+      case "stake/unbond":
+        ctx, _ := txi.Unwrap().(stake.TxUnbond)
+        stakeTx.Amount.Denom = "fermion"
+        stakeTx.Amount.Amount = int64(ctx.Shares)
         break
-      case stake.TxUnbond,stake.TxDelegate, stake.TxDeclareCandidacy:
-        kind, _ := txi.GetKind()
-        stakeTx.From = nonceAddr
-        stakeTx.Type = strings.Replace(kind, "stake/", "", -1)
-        switch kind {
-          case "stake/unbond":
-            ctx, _ := txi.Unwrap().(stake.TxUnbond)
-            stakeTx.Amount.Denom = "fermion"
-            stakeTx.Amount.Amount = int64(ctx.Shares)
-            break
-          case "stake/delegate":
-            ctx, _ := txi.Unwrap().(stake.TxDelegate)
-            stakeTx.Amount.Denom = ctx.Bond.Denom
-            stakeTx.Amount.Amount = ctx.Bond.Amount
-            break
-          case "stake/declareCandidacy":
-            ctx, _ := txi.Unwrap().(stake.TxDeclareCandidacy)
-            stakeTx.Amount.Denom = ctx.BondUpdate.Bond.Denom
-            stakeTx.Amount.Amount = ctx.BondUpdate.Bond.Amount
-            break
-        }
-        return "stake", stakeTx
+      case "stake/delegate":
+        ctx, _ := txi.Unwrap().(stake.TxDelegate)
+        stakeTx.Amount.Denom = ctx.Bond.Denom
+        stakeTx.Amount.Amount = ctx.Bond.Amount
+        break
+      case "stake/declareCandidacy":
+        ctx, _ := txi.Unwrap().(stake.TxDeclareCandidacy)
+        stakeTx.Amount.Denom = ctx.BondUpdate.Bond.Denom
+        stakeTx.Amount.Amount = ctx.BondUpdate.Bond.Amount
+        break
+      }
+      return "stake", stakeTx
     }
     txl, ok = txi.Unwrap().(sdk.TxLayer)
   }
