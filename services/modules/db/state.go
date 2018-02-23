@@ -9,7 +9,9 @@ import (
 type MgoBackend struct {}
 
 
-var Mgo = MgoBackend{}
+var Mgo = MgoBackend{
+
+}
 var url = viper.GetString("mgo-url")
 var session, err = mgo.Dial(url)
 

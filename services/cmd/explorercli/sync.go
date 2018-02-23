@@ -50,6 +50,10 @@ func prepareSync(){
 }
 
 func startSync() error {
+	mgo := fmt.Sprintf("%s", viper.GetString(MgoUrl))
+
+	log.Printf("Mgo on %s",mgo)
+
 	prepareSync()
 
 	log.Printf("sync Transactions start")
