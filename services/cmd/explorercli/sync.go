@@ -34,7 +34,8 @@ var (
 )
 
 func prepareSync(){
-	db.Mgo.Init()
+	url := viper.GetString("mgo-url")
+	db.Mgo.Init(url)
 	_,err := db.Mgo.QueryLastedBlock()
 
 	if err != nil {
@@ -50,10 +51,6 @@ func prepareSync(){
 }
 
 func startSync() error {
-	mgo := fmt.Sprintf("%s", viper.GetString(MgoUrl))
-
-	log.Printf("Mgo on %s",mgo)
-
 	prepareSync()
 
 	log.Printf("sync Transactions start")

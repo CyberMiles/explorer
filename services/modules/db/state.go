@@ -4,27 +4,27 @@ import (
 	"log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/spf13/viper"
 )
-type MgoBackend struct {}
-
-
-var Mgo = MgoBackend{
-
+type MgoBackend struct {
+	Session *mgo.Session
 }
-var url = viper.GetString("mgo-url")
-var session, err = mgo.Dial(url)
 
-func (MgoBackend) Init(){
+
+var Mgo = MgoBackend{}
+
+func (m *MgoBackend) Init(url string){
+	log.Printf("state :Mgo on %s",url)
+	var session, err = mgo.Dial(url)
 	if err != nil {
 		panic(err)
 	}
 	session.SetMode(mgo.Monotonic, true)
-	index()
+	m.Session = session
+	m.index()
 }
 
-func index(){
-	c := session.DB(DbCosmosTxn).C(TbNmCoinTx)
+func (m *MgoBackend) index(){
+	c := m.Session.DB(DbCosmosTxn).C(TbNmCoinTx)
 
 	index := mgo.Index{
 		Key:        []string{"from"}, // 索引字段， 默认升序,若需降序在字段前加-
@@ -35,78 +35,78 @@ func index(){
 
 	c.EnsureIndex(index)
 
-	c = session.DB(DbCosmosTxn).C(TbNmStakeTx)
+	c = m.Session.DB(DbCosmosTxn).C(TbNmStakeTx)
 	c.EnsureIndex(index)
 }
 
-func (MgoBackend) Save(tx TxHander) error{
-	c := session.DB(DbCosmosTxn).C(tx.TbNm())
-	err = c.Insert(tx)
+func (m *MgoBackend) Save(tx TxHander) error{
+	c := m.Session.DB(DbCosmosTxn).C(tx.TbNm())
+	err := c.Insert(tx)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return err
 }
 
-func (MgoBackend) QueryCoinTxs() ([]CoinTx)  {
+func (m *MgoBackend) QueryCoinTxs() ([]CoinTx)  {
 	result := []CoinTx{}
-	c := session.DB(DbCosmosTxn).C(TbNmCoinTx)
-	err = c.Find(nil).Sort("-time").All(&result)
+	c := m.Session.DB(DbCosmosTxn).C(TbNmCoinTx)
+	err := c.Find(nil).Sort("-time").All(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return result
 }
 
-func (MgoBackend) QueryStakeTxs() ([]StakeTx)  {
+func (m *MgoBackend) QueryStakeTxs() ([]StakeTx)  {
 	result := []StakeTx{}
-	c := session.DB(DbCosmosTxn).C(TbNmStakeTx)
-	err = c.Find(nil).Sort("-time").All(&result)
+	c := m.Session.DB(DbCosmosTxn).C(TbNmStakeTx)
+	err := c.Find(nil).Sort("-time").All(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return result
 }
 
-func (MgoBackend) QueryCoinTxsByFrom(from string) ([]CoinTx)  {
+func (m *MgoBackend) QueryCoinTxsByFrom(from string) ([]CoinTx)  {
 	result := []CoinTx{}
-	c := session.DB(DbCosmosTxn).C(TbNmCoinTx)
-	err = c.Find(bson.M{"from": from}).Sort("-time").All(&result)
+	c := m.Session.DB(DbCosmosTxn).C(TbNmCoinTx)
+	err := c.Find(bson.M{"from": from}).Sort("-time").All(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return result
 }
 
-func (MgoBackend) QueryStakeTxsByFrom(from string) ([]StakeTx)  {
+func (m *MgoBackend) QueryStakeTxsByFrom(from string) ([]StakeTx)  {
 	result := []StakeTx{}
-	c := session.DB(DbCosmosTxn).C(TbNmStakeTx)
-	err = c.Find(bson.M{"from": from}).Sort("-time").All(&result)
+	c := m.Session.DB(DbCosmosTxn).C(TbNmStakeTx)
+	err := c.Find(bson.M{"from": from}).Sort("-time").All(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return result
 }
 
-func (MgoBackend) QueryPageCoinTxsByFrom(from string,page int)([]CoinTx)  {
+func (m *MgoBackend) QueryPageCoinTxsByFrom(from string,page int)([]CoinTx)  {
 	result := []CoinTx{}
-	c := session.DB(DbCosmosTxn).C(TbNmCoinTx)
+	c := m.Session.DB(DbCosmosTxn).C(TbNmCoinTx)
 	skip := (page-1) * PageSize
-	err = c.Find(bson.M{"from": from}).Sort("-time").Skip(skip).Limit(PageSize).All(&result)
+	err := c.Find(bson.M{"from": from}).Sort("-time").Skip(skip).Limit(PageSize).All(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return result
 }
 
-func (MgoBackend) QueryLastedBlock()(SyncBlock,error){
+func (m *MgoBackend) QueryLastedBlock()(SyncBlock,error){
 	result := SyncBlock{}
-	c := session.DB(DbCosmosTxn).C(TbNmSyncBlock)
-	err = c.Find(bson.M{}).One(&result)
+	c := m.Session.DB(DbCosmosTxn).C(TbNmSyncBlock)
+	err := c.Find(bson.M{}).One(&result)
 	return result,err
 }
 
-func (MgoBackend) UpdateBlock(b SyncBlock) error{
-	c := session.DB(DbCosmosTxn).C(TbNmSyncBlock)
+func (m *MgoBackend) UpdateBlock(b SyncBlock) error{
+	c := m.Session.DB(DbCosmosTxn).C(TbNmSyncBlock)
 	return c.Update(nil,b)
 }

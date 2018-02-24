@@ -73,9 +73,8 @@ func cmdRestServer(cmd *cobra.Command, args []string) error {
   AddV1Routes(router.PathPrefix("/v1").Subrouter())
 
 	addr := fmt.Sprintf(":%d", viper.GetInt(FlagPort))
-	mgo := fmt.Sprintf(":%s", viper.GetString(MgoUrl))
 
-	log.Printf("Serving on %q,Mgo on %s", addr,mgo)
+	log.Printf("Serving on %q", addr)
 
 	// loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 	return http.ListenAndServe(addr, router)
