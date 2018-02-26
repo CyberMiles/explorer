@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	// "os"
 	"log"
 	"net/http"
 
@@ -84,7 +83,7 @@ func cmdRestServer(cmd *cobra.Command, args []string) error {
 	//return http.ListenAndServe(addr, router)
 	 return http.ListenAndServe(addr,
          handlers.LoggingHandler(os.Stdout, handlers.CORS(
-             handlers.AllowedMethods([]string{"GET"}),
+             handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
              handlers.AllowedOrigins([]string{"*"}),
-             handlers.AllowedHeaders([]string{"X-Requested-With"}))(router)))
+             handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}))(router)))
 }
