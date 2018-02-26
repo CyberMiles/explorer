@@ -25,6 +25,7 @@ import (
 const (
 	FlagPort = "port"
 	MgoUrl = "mgo-url"
+	Cron = "cron"
 )
 
 var (
@@ -40,6 +41,7 @@ var (
 func prepareRestServerCommands() {
 	commands.AddBasicFlags(restServerCmd)
 	restServerCmd.PersistentFlags().String(MgoUrl, "localhost:27017", "url of MongoDB")
+	restServerCmd.PersistentFlags().String(Cron, "@every 60s", "a new crontab schedule for sync block")
 	restServerCmd.PersistentFlags().IntP(FlagPort, "p", 8998, "port to run the server on")
 }
 

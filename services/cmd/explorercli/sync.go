@@ -34,7 +34,7 @@ var (
 )
 
 func prepareSync(){
-	url := viper.GetString("mgo-url")
+	url := viper.GetString(MgoUrl)
 	db.Mgo.Init(url)
 	_,err := db.Mgo.QueryLastedBlock()
 
@@ -56,7 +56,7 @@ func startSync() error {
 	log.Printf("sync Transactions start")
 	c := commands.GetNode()
 
-	spec := "@every 60s"
+	spec := viper.GetString(Cron)
 	cron := cron.New()
 	cron.AddFunc(spec, func() {
 		block,err := db.Mgo.QueryLastedBlock()
