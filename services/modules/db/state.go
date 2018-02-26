@@ -78,10 +78,20 @@ func (m *MgoBackend) QueryCoinTxsByFrom(from string) ([]CoinTx)  {
 	return result
 }
 
-func (m *MgoBackend) QueryStakeTxsByFrom(from string) ([]StakeTx)  {
+func (m *MgoBackend) QueryCoinTxsByAccount(account string) ([]CoinTx)  {
+	result := []CoinTx{}
+	c := m.Session.DB(DbCosmosTxn).C(TbNmCoinTx)
+	err := c.Find(bson.M{"$or": []bson.M{bson.M{"from": account}, bson.M{"to": account}}}).Sort("-time").All(&result)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return result
+}
+
+func (m *MgoBackend) QueryStakeTxsByAccount(account string) ([]StakeTx)  {
 	result := []StakeTx{}
 	c := m.Session.DB(DbCosmosTxn).C(TbNmStakeTx)
-	err := c.Find(bson.M{"from": from}).Sort("-time").All(&result)
+	err := c.Find(bson.M{"from": account}).Sort("-time").All(&result)
 	if err != nil {
 		log.Fatal(err)
 	}

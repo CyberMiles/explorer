@@ -139,10 +139,19 @@ func searchCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
   printResult(w, wrap)
 }
 
-func searchStakeTxByAccount(w http.ResponseWriter, r *http.Request) {
+func queryCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   account := args["address"]
-  result := db.Mgo.QueryStakeTxsByFrom(account)
+  result := db.Mgo.QueryCoinTxsByAccount(account)
+  // display
+
+  printResult(w, result)
+}
+
+func queryStakeTxByAccount(w http.ResponseWriter, r *http.Request) {
+  args := mux.Vars(r)
+  account := args["address"]
+  result := db.Mgo.QueryStakeTxsByAccount(account)
   // display
 
   printResult(w, result)
@@ -302,13 +311,13 @@ func RegisterSearchCoinTxByAccount(r *mux.Router) error {
   return nil
 }
 
-func RegisterSearchStakeTxByAccount(r *mux.Router) error {
-  r.HandleFunc("/account/{address}/tx/stake", searchStakeTxByAccount).Methods("GET")
+func RegisterQueryCoinTxByAccount(r *mux.Router) error {
+  r.HandleFunc("/tx/coin/{address}", queryCoinTxByAccount).Methods("GET")
   return nil
 }
 
-func RegisterSearchCoinTxByAccountPage(r *mux.Router) error {
-  r.HandleFunc("/account/tx/coin/{address}/{page}", searchCoinTxByAccount).Methods("GET")
+func RegisterQueryStakeTxByAccount(r *mux.Router) error {
+  r.HandleFunc("/account/{address}/tx/stake", queryStakeTxByAccount).Methods("GET")
   return nil
 }
 
@@ -335,7 +344,8 @@ func RegisterTx(r *mux.Router) error {
     RegisterQueryRawTx,
     registerSearchTxByBlock,
     RegisterSearchCoinTxByAccount,
-    RegisterSearchStakeTxByAccount,
+    RegisterQueryCoinTxByAccount,
+    RegisterQueryStakeTxByAccount,
     RegisterDecodeRaw,
     RegisterQueryRecentCoinTx,
     RegisterQueryRecentStakeTx,

@@ -34,7 +34,7 @@ func TestSaveCoinTxs(t *testing.T) {
 
 func TestQueryCoinTxsByFrom(t *testing.T) {
 	Mgo.Init("localhost:27017")
-	restlt := Mgo.QueryCoinTxsByFrom("0D7ACAD5C3F3EE3DBFB972F52D652509437E0044")
+	restlt := Mgo.QueryCoinTxsByAccount("0D7ACAD5C3F3EE3DBFB972F52D652509437E0044")
 	fmt.Println("%s",restlt)
 	////var s = fmt.Sprintf("%s",[]byte("D5EF35C78C86F8750FDAE1FED11AE8FA811E9095"))
 	////fmt.Println("%s",s)
