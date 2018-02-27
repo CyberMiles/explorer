@@ -52,6 +52,8 @@ func prepareSync(){
 
 func startSync() error {
 	prepareSync()
+
+	log.Printf("sync Transactions start")
 	c := commands.GetNode()
 	processSync(c)
 	return nil

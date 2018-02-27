@@ -7,13 +7,6 @@ import (
   "github.com/tendermint/go-wire/data"
 )
 
-const (
-  FlagSyncJson = "sync-json"
-  SmallBatchSize = 20
-  LargeBatchSize = 5000
-  MaxRecentSize = 20
-)
-
 type SyncResult struct {
   CurrentPos int64 `json:"current_pos"`
   TotalCoinTxs int64 `json:"total_coin_txs"`
