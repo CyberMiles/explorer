@@ -4,6 +4,7 @@ import (
 	"log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"errors"
 )
 type MgoBackend struct {
 	Session *mgo.Session
@@ -41,7 +42,14 @@ func (m *MgoBackend) index(){
 
 func (m *MgoBackend) Save(tx TxHander) error{
 	c := m.Session.DB(DbCosmosTxn).C(tx.TbNm())
-	err := c.Insert(tx)
+	//先按照关键字查询，如果存在，直接返回
+	k,v := tx.KvPair()
+	n,err := c.Find(bson.M{k: v}).Count()
+	if(n >= 1){
+		return errors.New("record existed")
+	}
+
+	err = c.Insert(tx)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -15,6 +15,7 @@ const (
 
 type TxHander interface {
 	TbNm() string
+	KvPair() (string,string)
 }
 
 type CoinTx struct {
@@ -39,17 +40,28 @@ type SyncBlock struct {
 	CurrentPos int64 `json:"current_pos"`
 	TotalCoinTxs int64 `json:"total_coin_txs"`
 	TotalStakeTxs int64 `json:"total_stake_txs"`
-	State int64 //0：同步完成，1：同步中
 }
 
 func(c CoinTx) TbNm() string{
 	return TbNmCoinTx
 }
 
+func(c CoinTx) KvPair() (string,string){
+	return "tx_hash",c.TxHash
+}
+
 func(c StakeTx) TbNm() string{
 	return TbNmStakeTx
 }
 
+func(c StakeTx) KvPair() (string,string){
+	return "tx_hash",c.TxHash
+}
+
 func(c SyncBlock) TbNm() string{
 	return TbNmSyncBlock
+}
+
+func(c SyncBlock) KvPair() (string,string){
+	return "current_pos",string(c.CurrentPos)
 }

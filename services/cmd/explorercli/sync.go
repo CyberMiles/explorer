@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -13,13 +12,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/tendermint/go-wire/data"
-
 	"github.com/ly0129ly/explorer/services/modules/stake"
-	"github.com/ly0129ly/explorer/services/modules/sync"
-	"github.com/robfig/cron"
 	"github.com/ly0129ly/explorer/services/modules/db"
 	"time"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"context"
+	"github.com/tendermint/tmlibs/pubsub/query"
+	"encoding/hex"
+	"github.com/tendermint/tendermint/types"
+	"github.com/spf13/cast"
 )
 
 var (
@@ -44,7 +45,6 @@ func prepareSync(){
 			CurrentPos:1,
 			TotalCoinTxs:0,
 			TotalStakeTxs:0,
-			State:0,
 		}
 		db.Mgo.Save(tx)
 	}
@@ -52,179 +52,64 @@ func prepareSync(){
 
 func startSync() error {
 	prepareSync()
-
-	log.Printf("sync Transactions start")
 	c := commands.GetNode()
-
-	spec := viper.GetString(Cron)
-	cron := cron.New()
-	cron.AddFunc(spec, func() {
-		block,err := db.Mgo.QueryLastedBlock()
-		//只有同步完成，才可以执行下一次同步任务
-		if block.State == 0 && err == nil{
-			Sync(block,c)
-		}
-	})
-	cron.Start()
-
+	processSync(c)
 	return nil
 }
 
-func Sync(b db.SyncBlock,c rpcclient.Client){
-	//更新状态为同步中
-	b.State = 1
-	db.Mgo.UpdateBlock(b)
+func processSync(c rpcclient.Client){
+	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
+	query := query.MustParse("tm.event = 'Tx'")
+	txs := make(chan interface{})
 
-	current := b.CurrentPos
-	latest := int64(0)
+	c.Start()
+	err := c.Subscribe(ctx, "tx-watch", query, txs)
 
-	log.Printf("sync pos: %d",current)
+	if err != nil{
+		fmt.Println("got ", err)
+	}
 
-	for ok := true; ok; ok = current < latest {
-		blocks, err := c.BlockchainInfo(current, current+sync.SmallBatchSize)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, block := range blocks.BlockMetas {
-			if (block.Header.NumTxs > 0) {
-				txhash := block.Header.DataHash
-				txtype, tx := parseTx(txhash,c)
-				if (txtype == "coin") {
-					coinTx, _ := tx.(db.CoinTx)
-					coinTx.TxHash = fmt.Sprintf("%s",txhash)
-					coinTx.Time = block.Header.Time
-					coinTx.Height = block.Header.Height
-					//coinTxs = append([]db.CoinTx{coinTx}, coinTxs...)
-					err = db.Mgo.Save(coinTx)
-					if(err != nil){
-						break
-					}
-					b.TotalCoinTxs = b.TotalCoinTxs + 1
-				} else if (txtype == "stake") {
-					stakeTx, _ := tx.(db.StakeTx)
-					stakeTx.TxHash = fmt.Sprintf("%s",txhash)
-					stakeTx.Time = block.Header.Time
-					stakeTx.Height = block.Header.Height
-					//stakeTxs = append([]db.StakeTx{stakeTx}, stakeTxs...)
-					err = db.Mgo.Save(stakeTx)
-					if(err != nil){
-						break
-					}
-					b.TotalStakeTxs = b.TotalStakeTxs + 1
+	go func() {
+		log.Println("listening tx begin")
+		for e := range txs {
+			block,err := db.Mgo.QueryLastedBlock()
+			deliverTxRes := e.(types.TMEventData).Unwrap().(types.EventDataTx)
+			height := deliverTxRes.Height
+
+			txb, _ := sdk.LoadTx(deliverTxRes.Tx)
+			txtype, tx :=parseTx(txb)
+			if (txtype == "coin") {
+				coinTx, _ := tx.(db.CoinTx)
+
+				coinTx.TxHash = strings.ToUpper(hex.EncodeToString(deliverTxRes.Tx.Hash()))
+				coinTx.Time = queryBlockTime(c,height)
+				coinTx.Height = height
+				err = db.Mgo.Save(coinTx)
+				if(err != nil){
+					break
 				}
-			}
-		}
-		current = blocks.BlockMetas[0].Header.Height + 1
-		latest = blocks.LastHeight
-	}
-	b.CurrentPos = current
-	b.State = 0
-	//更新状态为已完成
-	db.Mgo.UpdateBlock(b)
+				block.TotalCoinTxs += 1
 
-	if (current >= latest) {
-		time.Sleep(time.Second * 60)
-	}
+				log.Printf("watched coin tx,tx_hash=%s",coinTx.TxHash)
+			} else if (txtype == "stake") {
+				stakeTx, _ := tx.(db.StakeTx)
+				stakeTx.TxHash = strings.ToUpper(hex.EncodeToString(deliverTxRes.Tx.Hash()))
+				stakeTx.Time = queryBlockTime(c,height)
+				stakeTx.Height = height
+				err = db.Mgo.Save(stakeTx)
+				if(err != nil){
+					break
+				}
+				block.TotalStakeTxs += 1
+				log.Printf("watched stake tx,tx_hash=%s",stakeTx.TxHash)
+			}
+			block.CurrentPos = height
+			db.Mgo.UpdateBlock(block)
+		}
+	}()
 }
 
-
-
-//func cmdSync(cmd *cobra.Command, args []string) error {
-//	// load current syncing progress from file
-//	file := viper.GetString(sync.FlagSyncJson)
-//	raw, err := ioutil.ReadFile(file)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	var syncResult sync.SyncResult
-//	json.Unmarshal(raw, &syncResult)
-//
-//	for {
-//		syncResult = batch(syncResult)
-//	}
-//
-//	return nil
-//}
-
-
-
-//func batch(syncResult sync.SyncResult) sync.SyncResult {
-//	current := syncResult.CurrentPos
-//	max := current + sync.LargeBatchSize
-//	latest := int64(0)
-//	c := commands.GetNode()
-//	for ok := true; ok; ok = (current < latest && current < max) {
-//		blocks, err := c.BlockchainInfo(current, current+sync.SmallBatchSize)
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//		for _, block := range blocks.BlockMetas {
-//			if (block.Header.NumTxs > 0) {
-//				txhash := block.Header.DataHash
-//				txtype, tx := parseTx(txhash)
-//				if (txtype == "coin") {
-//					coinTx, _ := tx.(sync.CoinTx)
-//					coinTx.TxHash = txhash
-//					coinTx.Time = block.Header.Time
-//					coinTx.Height = block.Header.Height
-//					// prepend
-//					syncResult.CoinTxs = append([]sync.CoinTx{coinTx}, syncResult.CoinTxs...)
-//					if (len(syncResult.CoinTxs) > sync.MaxRecentSize) {
-//						// remove last one
-//						syncResult.CoinTxs = syncResult.CoinTxs[:len(syncResult.CoinTxs)-1]
-//					}
-//					// increase count
-//					syncResult.TotalCoinTxs = syncResult.TotalCoinTxs + 1
-//				} else if (txtype == "stake") {
-//					stakeTx, _ := tx.(sync.StakeTx)
-//					stakeTx.TxHash = txhash
-//					stakeTx.Time = block.Header.Time
-//					stakeTx.Height = block.Header.Height
-//					syncResult.StakeTxs = append([]sync.StakeTx{stakeTx}, syncResult.StakeTxs...)
-//					// if (len(syncResult.StakeTxs) > sync.MaxRecentSize) {
-//					//   syncResult.StakeTxs = syncResult.StakeTxs[:len(syncResult.StakeTxs)-1]
-//					// }
-//					syncResult.TotalStakeTxs = syncResult.TotalStakeTxs + 1
-//				}
-//			}
-//		}
-//		current = blocks.BlockMetas[0].Header.Height + 1
-//		latest = blocks.LastHeight
-//	}
-//
-//	// save batch process result into file
-//	syncResult.CurrentPos = current
-//	json, err := data.ToJSON(syncResult)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	file := viper.GetString(sync.FlagSyncJson)
-//	ioutil.WriteFile(file, json, 0644)
-//	fmt.Printf("%d scanned\n", current)
-//
-//	// stop if it's latest block
-//	if (current >= latest) {
-//		time.Sleep(time.Second * 60)
-//	}
-//
-//	return syncResult
-//}
-
-func parseTx(bkey []byte,client rpcclient.Client) (string, interface{}) {
-	// load tx by hash
-	prove := !viper.GetBool(commands.FlagTrustNode)
-	//client := commands.GetNode()
-	res, err := client.Tx(bkey, prove)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tx, err := sdk.LoadTx(res.Proof.Data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// parse
+func parseTx(tx sdk.Tx) (string, interface{}){
 	txl, ok := tx.Unwrap().(sdk.TxLayer)
 	var txi sdk.Tx
 	var coinTx db.CoinTx
@@ -269,4 +154,13 @@ func parseTx(bkey []byte,client rpcclient.Client) (string, interface{}) {
 		txl, ok = txi.Unwrap().(sdk.TxLayer)
 	}
 	return "", nil
+}
+
+func queryBlockTime(c rpcclient.Client,height int64) time.Time{
+	h := cast.ToInt64(height)
+	block, err := c.Block(&h)
+	if err != nil {
+		log.Printf("query block fail ,%d",height)
+	}
+	return block.BlockMeta.Header.Time
 }
