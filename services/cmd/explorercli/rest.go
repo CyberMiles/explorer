@@ -64,7 +64,7 @@ func AddRoutes(r *mux.Router) {
 }
 
 func cmdRestServer(cmd *cobra.Command, args []string) error {
-	startSync()
+	startWatch()
 	router := mux.NewRouter()
   // latest
   AddRoutes(router)

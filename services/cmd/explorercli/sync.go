@@ -28,16 +28,16 @@ var (
 		Use:  "sync",
 		Long: `sync`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			startSync()
+			startWatch()
 			return nil
 		},
 	}
 )
 
-func prepareSync(){
+func prepareSync(c rpcclient.Client){
 	url := viper.GetString(MgoUrl)
 	db.Mgo.Init(url)
-	_,err := db.Mgo.QueryLastedBlock()
+	block,err := db.Mgo.QueryLastedBlock()
 
 	if err != nil {
 		//初始化配置表
@@ -47,19 +47,25 @@ func prepareSync(){
 			TotalStakeTxs:0,
 		}
 		db.Mgo.Save(tx)
+		return
 	}
+
+	//开始漏单查询
+	go sync(block)
 }
 
-func startSync() error {
-	prepareSync()
-
-	log.Printf("sync Transactions start")
+func startWatch() error {
 	c := commands.GetNode()
+	prepareSync(c)
+
+
 	processSync(c)
 	return nil
 }
 
 func processSync(c rpcclient.Client){
+	log.Printf("watched Transactions start")
+
 	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
 	query := query.MustParse("tm.event = 'Tx'")
 	txs := make(chan interface{})
@@ -74,7 +80,7 @@ func processSync(c rpcclient.Client){
 	go func() {
 		log.Println("listening tx begin")
 		for e := range txs {
-			block,err := db.Mgo.QueryLastedBlock()
+			block,_ := db.Mgo.QueryLastedBlock()
 			deliverTxRes := e.(types.TMEventData).Unwrap().(types.EventDataTx)
 			height := deliverTxRes.Height
 
@@ -86,24 +92,22 @@ func processSync(c rpcclient.Client){
 				coinTx.TxHash = strings.ToUpper(hex.EncodeToString(deliverTxRes.Tx.Hash()))
 				coinTx.Time = queryBlockTime(c,height)
 				coinTx.Height = height
-				err = db.Mgo.Save(coinTx)
-				if(err != nil){
+				if db.Mgo.Save(coinTx) != nil {
 					break
 				}
 				block.TotalCoinTxs += 1
 
-				log.Printf("watched coin tx,tx_hash=%s",coinTx.TxHash)
+				log.Printf("watched coinTx,tx_hash=%s",coinTx.TxHash)
 			} else if (txtype == "stake") {
 				stakeTx, _ := tx.(db.StakeTx)
 				stakeTx.TxHash = strings.ToUpper(hex.EncodeToString(deliverTxRes.Tx.Hash()))
 				stakeTx.Time = queryBlockTime(c,height)
 				stakeTx.Height = height
-				err = db.Mgo.Save(stakeTx)
-				if(err != nil){
+				if db.Mgo.Save(stakeTx) != nil {
 					break
 				}
 				block.TotalStakeTxs += 1
-				log.Printf("watched stake tx,tx_hash=%s",stakeTx.TxHash)
+				log.Printf("watched stakeTx,tx_hash=%s",stakeTx.TxHash)
 			}
 			block.CurrentPos = height
 			db.Mgo.UpdateBlock(block)
@@ -165,4 +169,56 @@ func queryBlockTime(c rpcclient.Client,height int64) time.Time{
 		log.Printf("query block fail ,%d",height)
 	}
 	return block.BlockMeta.Header.Time
+}
+
+func sync(curBlock db.SyncBlock) {
+	log.Printf("sync Transactions start")
+	c := commands.GetNode()
+
+	current := curBlock.CurrentPos
+	latest := int64(0)
+
+	log.Printf("last block heigth：%d",current)
+
+	for ok := true; ok; ok = current < latest {
+		blocks, err := c.BlockchainInfo(current, current + 20)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, block := range blocks.BlockMetas {
+			if block.Header.NumTxs > 0 {
+				txhash := block.Header.DataHash
+				prove := !viper.GetBool(commands.FlagTrustNode)
+				res, _ := c.Tx(txhash, prove)
+				txs, _ := sdk.LoadTx(res.Proof.Data)
+				txtype, tx := parseTx(txs)
+				if  txtype == "coin" {
+					coinTx, _ := tx.(db.CoinTx)
+					coinTx.TxHash = strings.ToUpper(fmt.Sprintf("%s",txhash))
+					coinTx.Time = block.Header.Time
+					coinTx.Height = block.Header.Height
+					if db.Mgo.Save(coinTx) == nil {
+						curBlock.TotalCoinTxs += 1
+						log.Printf("sync coinTx,tx_hash=%s",coinTx.TxHash)
+					}
+
+				} else if txtype == "stake" {
+					stakeTx, _ := tx.(db.StakeTx)
+					stakeTx.TxHash = strings.ToUpper(fmt.Sprintf("%s",txhash))
+					stakeTx.Time = block.Header.Time
+					stakeTx.Height = block.Header.Height
+					if db.Mgo.Save(stakeTx) == nil {
+						curBlock.TotalStakeTxs += 1
+						log.Printf("sync stakeTx,tx_hash=%s",stakeTx.TxHash)
+					}
+				}
+			}
+		}
+		current = blocks.BlockMetas[0].Header.Height + 1
+		latest = blocks.LastHeight
+	}
+
+	curBlock.CurrentPos = current
+	db.Mgo.UpdateBlock(curBlock)
+	log.Printf("sync Transactions end,current block height:%d",current)
 }
