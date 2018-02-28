@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	// "os"
 	"log"
 	"net/http"
 
@@ -18,8 +17,15 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 
-	_ "github.com/cybermiles/explorer/services/modules/stake"
-	services "github.com/cybermiles/explorer/services/handlers"
+	_ "github.com/ly0129ly/explorer/services/modules/stake"
+	services "github.com/ly0129ly/explorer/services/handlers"
+	"github.com/gorilla/handlers"
+	"os"
+)
+
+const (
+	FlagPort = "port"
+	MgoUrl = "mgo-url"
 )
 
 var (
@@ -30,13 +36,12 @@ var (
 			return cmdRestServer(cmd, args)
 		},
 	}
-
-	flagPort = "port"
 )
 
 func prepareRestServerCommands() {
 	commands.AddBasicFlags(restServerCmd)
-	restServerCmd.PersistentFlags().IntP(flagPort, "p", 8998, "port to run the server on")
+	restServerCmd.PersistentFlags().String(MgoUrl, "localhost:27017", "url of MongoDB")
+	restServerCmd.PersistentFlags().IntP(FlagPort, "p", 8998, "port to run the server on")
 }
 
 func AddV1Routes(r *mux.Router) {
@@ -59,21 +64,24 @@ func AddRoutes(r *mux.Router) {
 }
 
 func cmdRestServer(cmd *cobra.Command, args []string) error {
+	startWatch()
 	router := mux.NewRouter()
   // latest
   AddRoutes(router)
+
+
   // v1
   AddV1Routes(router.PathPrefix("/v1").Subrouter())
 
-	addr := fmt.Sprintf(":%d", viper.GetInt(flagPort))
+	addr := fmt.Sprintf(":%d", viper.GetInt(FlagPort))
 
 	log.Printf("Serving on %q", addr)
 
 	// loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	return http.ListenAndServe(addr, router)
-	// return http.ListenAndServe(addr,
- //        handlers.LoggingHandler(os.Stdout, handlers.CORS(
- //            handlers.AllowedMethods([]string{"GET"}),
- //            handlers.AllowedOrigins([]string{"*"}),
- //            handlers.AllowedHeaders([]string{"X-Requested-With"}))(s)))
+	//return http.ListenAndServe(addr, router)
+	 return http.ListenAndServe(addr,
+         handlers.LoggingHandler(os.Stdout, handlers.CORS(
+             handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
+             handlers.AllowedOrigins([]string{"*"}),
+             handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}))(router)))
 }

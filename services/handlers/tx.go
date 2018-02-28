@@ -6,10 +6,8 @@ import (
   "strings"
   "strconv"
   "net/http"
-  "io/ioutil"
   "encoding/hex"
   "encoding/base64"
-  "encoding/json"
 
   "github.com/gorilla/mux"
   "github.com/spf13/viper"
@@ -24,8 +22,9 @@ import (
   "github.com/tendermint/tmlibs/common"
   ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-  "github.com/cybermiles/explorer/services/modules/stake"
-  "github.com/cybermiles/explorer/services/modules/sync"
+  "github.com/ly0129ly/explorer/services/modules/stake"
+  "github.com/ly0129ly/explorer/services/modules/sync"
+  "github.com/ly0129ly/explorer/services/modules/db"
 )
 
 type resp struct {
@@ -140,6 +139,24 @@ func searchCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
   printResult(w, wrap)
 }
 
+func queryCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
+  args := mux.Vars(r)
+  account := args["address"]
+  result := db.Mgo.QueryCoinTxsByAccount(account)
+  // display
+
+  printResult(w, result)
+}
+
+func queryStakeTxByAccount(w http.ResponseWriter, r *http.Request) {
+  args := mux.Vars(r)
+  account := args["address"]
+  result := db.Mgo.QueryStakeTxsByAccount(account)
+  // display
+
+  printResult(w, result)
+}
+
 func searchTx(w http.ResponseWriter, queries ...string) ([]interface{}, error) {
   prove := !viper.GetBool(commands.FlagTrustNode)
 
@@ -195,14 +212,34 @@ func decode(w http.ResponseWriter, body string) error {
 
 // queryRecentCoinTx is to get recent coin transactions
 func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
-  file := viper.GetString(sync.FlagSyncJson)
-  raw, err := ioutil.ReadFile(file)
-  if err != nil {
-    common.WriteError(w, err)
-    return
+  syncResult := sync.SyncResult{}
+
+  CoinTxs :=[]sync.CoinTx{}
+  coinTxs := db.Mgo.QueryCoinTxs();
+  for _,tx := range coinTxs{
+    TxHash,_:= hex.DecodeString(tx.TxHash)
+    From,_:= hex.DecodeString(tx.From)
+    To,_:= hex.DecodeString(tx.To)
+
+    CoinTx := sync.CoinTx{
+      TxHash:TxHash,
+      Time:tx.Time,
+      Height:tx.Height,
+      From:From,
+      To:To,
+    }
+    CoinTxs = append(CoinTxs,CoinTx)
   }
-  var syncResult sync.SyncResult
-  json.Unmarshal(raw, &syncResult)
+  syncResult.CoinTxs = CoinTxs
+
+
+  block,err:= db.Mgo.QueryLastedBlock()
+  if err == nil{
+    syncResult.CurrentPos = block.CurrentPos
+    syncResult.TotalCoinTxs = block.TotalCoinTxs
+    syncResult.TotalStakeTxs = block.TotalStakeTxs
+  }
+
 
   // check limit
   txs := syncResult.CoinTxs
@@ -216,15 +253,32 @@ func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
 
 // queryRecentStakeTx is to get recent stake transactions
 func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
-  file := viper.GetString(sync.FlagSyncJson)
-  raw, err := ioutil.ReadFile(file)
-  if err != nil {
-    common.WriteError(w, err)
-    return
-  }
-  var syncResult sync.SyncResult
-  json.Unmarshal(raw, &syncResult)
+  syncResult := sync.SyncResult{}
 
+  StakeTxs :=[]sync.StakeTx{}
+  stakeTxs := db.Mgo.QueryStakeTxs();
+  for _,tx := range stakeTxs{
+    TxHash,_:= hex.DecodeString(tx.TxHash)
+    From,_:= hex.DecodeString(tx.From)
+
+    CoinTx := sync.StakeTx{
+      TxHash:TxHash,
+      Time:tx.Time,
+      Height:tx.Height,
+      From:From,
+      Type:tx.Type,
+      Amount:tx.Amount,
+    }
+    StakeTxs = append(StakeTxs,CoinTx)
+  }
+  syncResult.StakeTxs = StakeTxs
+
+  block,err:= db.Mgo.QueryLastedBlock()
+  if err == nil{
+    syncResult.CurrentPos = block.CurrentPos
+    syncResult.TotalCoinTxs = block.TotalCoinTxs
+    syncResult.TotalStakeTxs = block.TotalStakeTxs
+  }
   // check limit
   txs := syncResult.StakeTxs
   if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l<=len(txs) {
@@ -257,6 +311,16 @@ func RegisterSearchCoinTxByAccount(r *mux.Router) error {
   return nil
 }
 
+func RegisterQueryCoinTxByAccount(r *mux.Router) error {
+  r.HandleFunc("/tx/coin/{address}", queryCoinTxByAccount).Methods("GET")
+  return nil
+}
+
+func RegisterQueryStakeTxByAccount(r *mux.Router) error {
+  r.HandleFunc("/account/{address}/tx/stake", queryStakeTxByAccount).Methods("GET")
+  return nil
+}
+
 func RegisterDecodeRaw(r *mux.Router) error {
   r.HandleFunc("/tx/decode", decodeRaw).Methods("POST")
   return nil
@@ -280,6 +344,8 @@ func RegisterTx(r *mux.Router) error {
     RegisterQueryRawTx,
     registerSearchTxByBlock,
     RegisterSearchCoinTxByAccount,
+    RegisterQueryCoinTxByAccount,
+    RegisterQueryStakeTxByAccount,
     RegisterDecodeRaw,
     RegisterQueryRecentCoinTx,
     RegisterQueryRecentStakeTx,
