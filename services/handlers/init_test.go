@@ -40,7 +40,7 @@ func TestRunner(t *testing.T) {
   viper.Set("home", homeDir)
   viper.SetConfigName("config") // name of config file (without extension)
   viper.AddConfigPath(homeDir)  // search root directory
-  viper.Set(sync.FlagSyncJson, "../sync.json")
+  //viper.Set(sync.FlagSyncJson, "../sync.json")
   err = viper.ReadInConfig()
   if err != nil {
     panic(err.Error())
