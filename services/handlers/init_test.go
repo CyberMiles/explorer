@@ -16,7 +16,6 @@ import (
   _ "github.com/cosmos/cosmos-sdk/modules/nonce"
   _ "github.com/cosmos/cosmos-sdk/modules/fee"
   _ "github.com/ly0129ly/explorer/services/modules/stake"
-  "github.com/ly0129ly/explorer/services/modules/sync"
 )
 
 var router *mux.Router
