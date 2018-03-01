@@ -17,7 +17,6 @@ import (
 	"time"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"context"
-	"github.com/tendermint/tmlibs/pubsub/query"
 	"encoding/hex"
 	"github.com/tendermint/tendermint/types"
 	"github.com/spf13/cast"
@@ -34,7 +33,7 @@ var (
 	}
 )
 
-func prepareSync(c rpcclient.Client){
+func prepareSync(){
 	url := viper.GetString(MgoUrl)
 	db.Mgo.Init(url)
 	block,err := db.Mgo.QueryLastedBlock()
@@ -56,7 +55,7 @@ func prepareSync(c rpcclient.Client){
 
 func startWatch() error {
 	c := commands.GetNode()
-	prepareSync(c)
+	prepareSync()
 
 
 	processSync(c)
@@ -67,11 +66,11 @@ func processSync(c rpcclient.Client){
 	log.Printf("watched Transactions start")
 
 	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
-	query := query.MustParse("tm.event = 'Tx'")
+	//query := query.MustParse("tm.event = 'Tx'")
 	txs := make(chan interface{})
 
 	c.Start()
-	err := c.Subscribe(ctx, "tx-watch", query, txs)
+	err := c.Subscribe(ctx, "tx-watch", types.EventQueryTx, txs)
 
 	if err != nil{
 		fmt.Println("got ", err)
