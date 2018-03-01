@@ -22,9 +22,9 @@ import (
   "github.com/tendermint/tmlibs/common"
   ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-  "github.com/ly0129ly/explorer/services/modules/stake"
-  "github.com/ly0129ly/explorer/services/modules/sync"
-  "github.com/ly0129ly/explorer/services/modules/db"
+  "github.com/cybermiles/explorer/services/modules/stake"
+  "github.com/cybermiles/explorer/services/modules/sync"
+  "github.com/cybermiles/explorer/services/modules/store"
 )
 
 type resp struct {
@@ -88,15 +88,15 @@ func formatTx(height int64, data []byte, raw bool, txhash string) (interface{}, 
   if (!raw) {
     txl, ok := tx.Unwrap().(sdk.TxLayer)
     var txi sdk.Tx
-    loop: for ok {
-      txi = txl.Next()
-      switch txi.Unwrap().(type) {
-        case fee.Fee, coin.SendTx, stake.TxDelegate, stake.TxDeclareCandidacy, stake.TxUnbond:
-          tx = txi
-          break loop
-      }
-      txl, ok = txi.Unwrap().(sdk.TxLayer)
+  loop: for ok {
+    txi = txl.Next()
+    switch txi.Unwrap().(type) {
+    case fee.Fee, coin.SendTx, stake.TxDelegate, stake.TxDeclareCandidacy, stake.TxUnbond:
+      tx = txi
+      break loop
     }
+    txl, ok = txi.Unwrap().(sdk.TxLayer)
+  }
   }
   wrap := &resp{height, tx, strings.ToUpper(txhash)}
   return wrap, nil
@@ -137,24 +137,6 @@ func searchCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
   }
   // display
   printResult(w, wrap)
-}
-
-func queryCoinTxByAccount(w http.ResponseWriter, r *http.Request) {
-  args := mux.Vars(r)
-  account := args["address"]
-  result := db.Mgo.QueryCoinTxsByAccount(account)
-  // display
-
-  printResult(w, result)
-}
-
-func queryStakeTxByAccount(w http.ResponseWriter, r *http.Request) {
-  args := mux.Vars(r)
-  account := args["address"]
-  result := db.Mgo.QueryStakeTxsByAccount(account)
-  // display
-
-  printResult(w, result)
 }
 
 func searchTx(w http.ResponseWriter, queries ...string) ([]interface{}, error) {
@@ -215,7 +197,7 @@ func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
   syncResult := sync.SyncResult{}
 
   CoinTxs :=[]sync.CoinTx{}
-  coinTxs := db.Mgo.QueryCoinTxs();
+  coinTxs := store.Mgo.QueryCoinTxs();
   for _,tx := range coinTxs{
     TxHash,_:= hex.DecodeString(tx.TxHash)
     From,_:= hex.DecodeString(tx.From)
@@ -233,7 +215,7 @@ func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
   syncResult.CoinTxs = CoinTxs
 
 
-  block,err:= db.Mgo.QueryLastedBlock()
+  block,err:= store.Mgo.QueryLastedBlock()
   if err == nil{
     syncResult.CurrentPos = block.CurrentPos
     syncResult.TotalCoinTxs = block.TotalCoinTxs
@@ -250,13 +232,32 @@ func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
   // display
   printResult(w, txs)
 }
+//func queryRecentCoinTx(w http.ResponseWriter, r *http.Request) {
+//  file := viper.GetString(sync.FlagSyncJson)
+//  raw, err := ioutil.ReadFile(file)
+//  if err != nil {
+//    common.WriteError(w, err)
+//    return
+//  }
+//  var syncResult sync.SyncResult
+//  json.Unmarshal(raw, &syncResult)
+//
+//  // check limit
+//  txs := syncResult.CoinTxs
+//  if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l<=len(txs) {
+//    txs = txs[:l]
+//  }
+//
+//  // display
+//  printResult(w, txs)
+//}
 
 // queryRecentStakeTx is to get recent stake transactions
 func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
   syncResult := sync.SyncResult{}
 
   StakeTxs :=[]sync.StakeTx{}
-  stakeTxs := db.Mgo.QueryStakeTxs();
+  stakeTxs := store.Mgo.QueryStakeTxs();
   for _,tx := range stakeTxs{
     TxHash,_:= hex.DecodeString(tx.TxHash)
     From,_:= hex.DecodeString(tx.From)
@@ -273,7 +274,7 @@ func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
   }
   syncResult.StakeTxs = StakeTxs
 
-  block,err:= db.Mgo.QueryLastedBlock()
+  block,err:= store.Mgo.QueryLastedBlock()
   if err == nil{
     syncResult.CurrentPos = block.CurrentPos
     syncResult.TotalCoinTxs = block.TotalCoinTxs
@@ -288,6 +289,25 @@ func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
   // display
   printResult(w, txs)
 }
+//func queryRecentStakeTx(w http.ResponseWriter, r *http.Request) {
+//  file := viper.GetString(sync.FlagSyncJson)
+//  raw, err := ioutil.ReadFile(file)
+//  if err != nil {
+//    common.WriteError(w, err)
+//    return
+//  }
+//  var syncResult sync.SyncResult
+//  json.Unmarshal(raw, &syncResult)
+//
+//  // check limit
+//  txs := syncResult.StakeTxs
+//  if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l<=len(txs) {
+//    txs = txs[:l]
+//  }
+//
+//  // display
+//  printResult(w, txs)
+//}
 
 // mux.Router registrars
 
@@ -308,16 +328,6 @@ func registerSearchTxByBlock(r *mux.Router) error {
 
 func RegisterSearchCoinTxByAccount(r *mux.Router) error {
   r.HandleFunc("/account/{address}/tx/coin", searchCoinTxByAccount).Methods("GET")
-  return nil
-}
-
-func RegisterQueryCoinTxByAccount(r *mux.Router) error {
-  r.HandleFunc("/tx/coin/{address}", queryCoinTxByAccount).Methods("GET")
-  return nil
-}
-
-func RegisterQueryStakeTxByAccount(r *mux.Router) error {
-  r.HandleFunc("/account/{address}/tx/stake", queryStakeTxByAccount).Methods("GET")
   return nil
 }
 
@@ -344,8 +354,6 @@ func RegisterTx(r *mux.Router) error {
     RegisterQueryRawTx,
     registerSearchTxByBlock,
     RegisterSearchCoinTxByAccount,
-    RegisterQueryCoinTxByAccount,
-    RegisterQueryStakeTxByAccount,
     RegisterDecodeRaw,
     RegisterQueryRecentCoinTx,
     RegisterQueryRecentStakeTx,
@@ -358,5 +366,4 @@ func RegisterTx(r *mux.Router) error {
   }
   return nil
 }
-
 // End of mux.Router registrars

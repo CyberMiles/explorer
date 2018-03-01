@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/ly0129ly/explorer/services/version"
+	"github.com/cybermiles/explorer/services/version"
 )
 
 // entry point for this binary
@@ -36,8 +36,6 @@ func main() {
 	ExplorerCli.AddCommand(
 		commands.InitCmd,
 		restServerCmd,
-		syncCmd,
-		
 		version.VersionCmd,
 	)
 

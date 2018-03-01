@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	// "os"
 	"log"
 	"net/http"
 
@@ -17,10 +18,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 
-	_ "github.com/ly0129ly/explorer/services/modules/stake"
-	services "github.com/ly0129ly/explorer/services/handlers"
-	"github.com/gorilla/handlers"
-	"os"
+	_ "github.com/cybermiles/explorer/services/modules/stake"
+	services "github.com/cybermiles/explorer/services/handlers"
 )
 
 const (
@@ -68,8 +67,6 @@ func cmdRestServer(cmd *cobra.Command, args []string) error {
 	router := mux.NewRouter()
   // latest
   AddRoutes(router)
-
-
   // v1
   AddV1Routes(router.PathPrefix("/v1").Subrouter())
 
@@ -78,10 +75,10 @@ func cmdRestServer(cmd *cobra.Command, args []string) error {
 	log.Printf("Serving on %q", addr)
 
 	// loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	//return http.ListenAndServe(addr, router)
-	 return http.ListenAndServe(addr,
-         handlers.LoggingHandler(os.Stdout, handlers.CORS(
-             handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
-             handlers.AllowedOrigins([]string{"*"}),
-             handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}))(router)))
+	return http.ListenAndServe(addr, router)
+	// return http.ListenAndServe(addr,
+ //        handlers.LoggingHandler(os.Stdout, handlers.CORS(
+ //            handlers.AllowedMethods([]string{"GET"}),
+ //            handlers.AllowedOrigins([]string{"*"}),
+ //            handlers.AllowedHeaders([]string{"X-Requested-With"}))(s)))
 }
