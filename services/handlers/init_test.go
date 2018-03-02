@@ -15,8 +15,7 @@ import (
   _ "github.com/cosmos/cosmos-sdk/modules/coin"
   _ "github.com/cosmos/cosmos-sdk/modules/nonce"
   _ "github.com/cosmos/cosmos-sdk/modules/fee"
-  _ "github.com/cybermiles/explorer/services/modules/stake"  
-  "github.com/cybermiles/explorer/services/modules/sync"  
+  _ "github.com/ly0129ly/explorer/services/modules/stake"
 )
 
 var router *mux.Router
@@ -40,7 +39,7 @@ func TestRunner(t *testing.T) {
   viper.Set("home", homeDir)
   viper.SetConfigName("config") // name of config file (without extension)
   viper.AddConfigPath(homeDir)  // search root directory
-  viper.Set(sync.FlagSyncJson, "../sync.json")
+  //viper.Set(sync.FlagSyncJson, "../sync.json")
   err = viper.ReadInConfig()
   if err != nil {
     panic(err.Error())

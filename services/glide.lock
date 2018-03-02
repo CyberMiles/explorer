@@ -310,3 +310,5 @@ testImports:
   subpackages:
   - assert
   - require
+- name: gopkg.in/mgo.v2
+  version: master
