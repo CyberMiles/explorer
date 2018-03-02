@@ -1,8 +1,8 @@
 ## Installation
 
 ```shell
-go get github.com/cybermiles/explorer/services
-cd $GOPATH/src/github.com/cybermiles/explorer/services
+go get github.com/CyberMiles/explorer/services
+cd $GOPATH/src/github.com/CyberMiles/explorer/services
 make all
 ```
 

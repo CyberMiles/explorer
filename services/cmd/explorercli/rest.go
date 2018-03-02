@@ -18,8 +18,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 
-	_ "github.com/cybermiles/explorer/services/modules/stake"
-	services "github.com/cybermiles/explorer/services/handlers"
+	_ "github.com/CyberMiles/explorer/services/modules/stake"
+	services "github.com/CyberMiles/explorer/services/handlers"
 )
 
 const (

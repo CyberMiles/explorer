@@ -1,4 +1,4 @@
-package: github.com/cosmos/gaia
+package: github.com/CyberMiles/explorer/services
 import:
 - package: github.com/gorilla/websocket
 - package: github.com/pkg/errors
@@ -46,6 +46,8 @@ import:
   - logger
 - package: github.com/gorilla/mux
   version: ^1.5.0
+- name: gopkg.in/mgo.v2
+  version: master
 testImport:
 - package: github.com/stretchr/testify
   subpackages:

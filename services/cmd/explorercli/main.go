@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cybermiles/explorer/services/version"
+	"github.com/CyberMiles/explorer/services/version"
 )
 
 // entry point for this binary
