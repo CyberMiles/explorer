@@ -5,16 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/CyberMiles/explorer/services/version"
 )
 
 // entry point for this binary
 var (
 	ExplorerCli = &cobra.Command{
-		Use:   "explorercli",
+		Use: "explorercli",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
