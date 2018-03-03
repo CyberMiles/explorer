@@ -15,6 +15,7 @@ import (
   "github.com/CyberMiles/explorer/services/modules/store"
   "time"
   rpcclient "github.com/tendermint/tendermint/rpc/client"
+  ctypes "github.com/tendermint/tendermint/rpc/core/types"
   "context"
   "encoding/hex"
   "github.com/tendermint/tendermint/types"
@@ -79,7 +80,7 @@ func processSync(){
         coinTx, _ := tx.(store.CoinTx)
 
         coinTx.TxHash = strings.ToUpper(hex.EncodeToString(deliverTxRes.Tx.Hash()))
-        coinTx.Time = queryBlockTime(c,height)
+        coinTx.Time = queryBlock(c, height).BlockMeta.Header.Time
         coinTx.Height = height
         if store.Mgo.Save(coinTx) != nil {
           break
@@ -90,7 +91,7 @@ func processSync(){
       } else if (txtype == "stake") {
         stakeTx, _ := tx.(store.StakeTx)
         stakeTx.TxHash = strings.ToUpper(hex.EncodeToString(deliverTxRes.Tx.Hash()))
-        stakeTx.Time = queryBlockTime(c,height)
+        stakeTx.Time = queryBlock(c, height).BlockMeta.Header.Time
         stakeTx.Height = height
         if store.Mgo.Save(stakeTx) != nil {
           break
@@ -151,13 +152,13 @@ func parseTx(tx sdk.Tx) (string, interface{}){
   return "", nil
 }
 
-func queryBlockTime(c rpcclient.Client,height int64) time.Time{
+func queryBlock(c rpcclient.Client,height int64) *ctypes.ResultBlock {
   h := cast.ToInt64(height)
   block, err := c.Block(&h)
   if err != nil {
-    log.Printf("query block fail ,%d",height)
+		log.Fatal("get block fail ,%d", h)
   }
-  return block.BlockMeta.Header.Time
+  return block
 }
 
 func sync(curBlock store.SyncBlock) {
@@ -174,40 +175,42 @@ func sync(curBlock store.SyncBlock) {
     if err != nil {
       log.Fatal(err)
     }
-    for _, block := range blocks.BlockMetas {
-      if block.Header.NumTxs > 0 {
-        txhash := block.Header.DataHash
-        prove := !viper.GetBool(commands.FlagTrustNode)
-        res, _ := c.Tx(txhash, prove)
-        txs, _ := sdk.LoadTx(res.Proof.Data)
-        txtype, tx := parseTx(txs)
-        if  txtype == "coin" {
-          coinTx, _ := tx.(store.CoinTx)
-          coinTx.TxHash = strings.ToUpper(fmt.Sprintf("%s",txhash))
-          coinTx.Time = block.Header.Time
-          coinTx.Height = block.Header.Height
-          if store.Mgo.Save(coinTx) == nil {
-            curBlock.TotalCoinTxs += 1
-            log.Printf("sync coinTx,tx_hash=%s",coinTx.TxHash)
-          }
+    for _, meta := range blocks.BlockMetas {
+      if meta.Header.NumTxs > 0 {
+		block := queryBlock(c, meta.Header.Height)
+		for _, txb := range block.Block.Data.Txs {
+			txs, _ := sdk.LoadTx(txb)
+			txhash := strings.ToUpper(hex.EncodeToString(txb.Hash()))
+			txtype, tx := parseTx(txs)
+			if txtype == "coin" {
+				coinTx, _ := tx.(store.CoinTx)
+				coinTx.TxHash = txhash
+				coinTx.Time = meta.Header.Time
+				coinTx.Height = meta.Header.Height
+				if store.Mgo.Save(coinTx) == nil {
+					curBlock.TotalCoinTxs += 1
+					log.Printf("sync coinTx,tx_hash=%s", coinTx.TxHash)
+				}
 
-        } else if txtype == "stake" {
-          stakeTx, _ := tx.(store.StakeTx)
-          stakeTx.TxHash = strings.ToUpper(fmt.Sprintf("%s",txhash))
-          stakeTx.Time = block.Header.Time
-          stakeTx.Height = block.Header.Height
-          if store.Mgo.Save(stakeTx) == nil {
-            curBlock.TotalStakeTxs += 1
-            log.Printf("sync stakeTx,tx_hash=%s",stakeTx.TxHash)
-          }
-        }
+			} else if txtype == "stake" {
+				stakeTx, _ := tx.(store.StakeTx)
+				stakeTx.TxHash = txhash
+				stakeTx.Time = meta.Header.Time
+				stakeTx.Height = meta.Header.Height
+				if store.Mgo.Save(stakeTx) == nil {
+					curBlock.TotalStakeTxs += 1
+					log.Printf("sync stakeTx,tx_hash=%s", stakeTx.TxHash)
+				}
+			}
+		}
       }
     }
     current = blocks.BlockMetas[0].Header.Height + 1
     latest = blocks.LastHeight
+
+    curBlock.CurrentPos = current
+    store.Mgo.UpdateBlock(curBlock)
   }
 
-  curBlock.CurrentPos = current
-  store.Mgo.UpdateBlock(curBlock)
   log.Printf("sync Transactions end,current block height:%d",current)
 }
